@@ -18,7 +18,7 @@ const niriBaseConfig = `hotkey-overlay {
 }
 
 environment {
-    DMS_RUN_GREETER "1"
+    ADVS_RUN_GREETER "1"
 }
 
 gestures {
@@ -108,7 +108,7 @@ func buildHyprlandPlan(configPath, qsCmd string) (launchPlan, error) {
 		lua := fmt.Sprintf("%s\nhl.on(\"hyprland.start\", function()\n    hl.exec_cmd(\"sh -c \\\"%s; hyprctl dispatch 'hl.dsp.exit()'\\\"\")\nend)\n", content, qsCmd)
 		tempConfig, err = writeTempConfig(lua, ".lua")
 	case configPath == "":
-		lua := fmt.Sprintf(`hl.env("DMS_RUN_GREETER", "1")
+		lua := fmt.Sprintf(`hl.env("ADVS_RUN_GREETER", "1")
 
 hl.config({
 	misc = {
@@ -193,7 +193,7 @@ func isHyprlandLuaConfig(configPath string) bool {
 }
 
 func writeTempConfig(content, suffix string) (string, error) {
-	file, err := os.CreateTemp("", "dms-greeter-*"+suffix)
+	file, err := os.CreateTemp("", "advs-greeter-*"+suffix)
 	if err != nil {
 		return "", err
 	}

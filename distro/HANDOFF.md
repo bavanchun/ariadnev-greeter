@@ -1,8 +1,8 @@
-# Handoff: dank-greeter packaging cutover + `dms-greeter-git`
+# Handoff: ariadnev-greeter packaging cutover + `advs-greeter-git`
 
 **Audience:** next agent / human continuing packaging work  
-**Repo focus:** [`AvengeMedia/dank-greeter`](https://github.com/AvengeMedia/dank-greeter)  
-**Related:** `danklinux`, `danklinux-docs`, `dms` (DankMaterialShell)  
+**Repo focus:** [`bavanchun/ariadnev-greeter`](https://github.com/bavanchun/ariadnev-greeter)  
+**Related:** `ariadnev`, `ariadnev-docs`, `advs` (AriadnevShell)  
 **Status as of:** 2026-07-20 (evening)
 
 ---
@@ -24,9 +24,9 @@
 
 ## Goal
 
-1. Greeter packaging origin is **dank-greeter**, not DMS.  
-2. Packages publish into **danklinux** channels (Copr / OBS / PPA / Void R2).  
-3. Stable `dms-greeter` stays live; **`dms-greeter-git`** is a separate package (Provides + Conflicts `dms-greeter`, same `/usr/bin/dms-greeter`).  
+1. Greeter packaging origin is **ariadnev-greeter**, not ADVS.  
+2. Packages publish into **ariadnev** channels (Copr / OBS / PPA / Void R2).  
+3. Stable `advs-greeter` stays live; **`advs-greeter-git`** is a separate package (Provides + Conflicts `advs-greeter`, same `/usr/bin/advs-greeter`).  
 4. Prove cutover on every channel, then push + prove GitHub Actions secrets.
 
 ---
@@ -35,14 +35,14 @@
 
 | Layer | Status |
 |-------|--------|
-| **In-tree packaging** for `dms-greeter-git` (Fedora, OBS openSUSE+Debian, Ubuntu PPA, Void) | **Done locally / uncommitted** |
-| **Workflows** unified dropdowns (`dms-greeter` \| `dms-greeter-git` \| `both`) | **Done locally / uncommitted** |
-| **dank-greeter GitHub Actions secrets** | **User reports all set** |
-| **Docs** (danklinux-docs install tabs + dank-greeter README) | **Updated ahead of publish** (docs repo may have its own uncommitted/staged set) |
-| **Copr** `dms-greeter-git` | Package exists; earlier build succeeded |
-| **OBS** `dms-greeter-git` | Package **created**; first upload had Debian fail; **fixed in tree but rebuild not uploaded yet** |
-| **PPA** `dms-greeter-git` | Packaging ready; **upload not started** |
-| **Void R2** `dms-greeter-git` | Template ready; **build/publish not started** |
+| **In-tree packaging** for `advs-greeter-git` (Fedora, OBS openSUSE+Debian, Ubuntu PPA, Void) | **Done locally / uncommitted** |
+| **Workflows** unified dropdowns (`advs-greeter` \| `advs-greeter-git` \| `both`) | **Done locally / uncommitted** |
+| **ariadnev-greeter GitHub Actions secrets** | **User reports all set** |
+| **Docs** (ariadnev-docs install tabs + ariadnev-greeter README) | **Updated ahead of publish** (docs repo may have its own uncommitted/staged set) |
+| **Copr** `advs-greeter-git` | Package exists; earlier build succeeded |
+| **OBS** `advs-greeter-git` | Package **created**; first upload had Debian fail; **fixed in tree but rebuild not uploaded yet** |
+| **PPA** `advs-greeter-git` | Packaging ready; **upload not started** |
+| **Void R2** `advs-greeter-git` | Template ready; **build/publish not started** |
 | **Commit / push of this work** | **Not done** — waiting on user |
 
 ---
@@ -51,56 +51,56 @@
 
 ### Fedora / Copr
 
-- Specs: `distro/fedora/dms-greeter.spec` + `dms-greeter-git.spec` (mutual Conflicts).  
-- Scripts: `copr-upload.sh` (unified; `dms-greeter` \| `dms-greeter-git`; empty-tag fallback → `1.0.0+git…`).  
+- Specs: `distro/fedora/advs-greeter.spec` + `advs-greeter-git.spec` (mutual Conflicts).  
+- Scripts: `copr-upload.sh` (unified; `advs-greeter` \| `advs-greeter-git`; empty-tag fallback → `1.0.0+git…`).  
 - Workflow: `.github/workflows/run-copr.yml` (dropdown; deleted `run-copr-git.yml` + `copr-upload-git.sh`).  
-- Copr project `avengemedia/danklinux` already has both package names.  
+- Copr project `avengemedia/ariadnev` already has both package names.  
 - Prior proof build: [10748722](https://copr.fedorainfracloud.org/coprs/build/10748722).
 
 ### OBS (openSUSE + Debian)
 
-- Specs/trees: `distro/opensuse/dms-greeter-git.spec`, `distro/debian/dms-greeter-git/`.  
-- Stable openSUSE/Debian: `Conflicts: dms-greeter-git`.  
-- Script: `obs-upload.sh` supports `dms-greeter` \| `dms-greeter-git`; creates OBS package if missing; packs checkout + submodule + `go mod vendor`; Python spec rewriter (sed broke on `+` in git versions).  
+- Specs/trees: `distro/opensuse/advs-greeter-git.spec`, `distro/debian/advs-greeter-git/`.  
+- Stable openSUSE/Debian: `Conflicts: advs-greeter-git`.  
+- Script: `obs-upload.sh` supports `advs-greeter` \| `advs-greeter-git`; creates OBS package if missing; packs checkout + submodule + `go mod vendor`; Python spec rewriter (sed broke on `+` in git versions).  
 - Workflow: `run-obs.yml` dropdown + submodules + Go for vendoring.  
-- **Live OBS:** `home:AvengeMedia:danklinux/dms-greeter-git` **exists**.  
+- **Live OBS:** `home:bavanchun:ariadnev/advs-greeter-git` **exists**.  
 - **First local upload** (`1.0.0+git9.d73d3c04`): openSUSE arches **succeeded**; **Debian_13 failed** because `dh_auto_test` ran `make test` without bundled Go on `PATH`.  
 - **Fix in tree (not re-uploaded):** `override_dh_auto_test` on Debian (+ Ubuntu) `debian/rules` for greeter and greeter-git.  
 - Rebuild CLI: bare integer or `--rebuild=N` — e.g.  
-  `./distro/scripts/obs-upload.sh dms-greeter-git 2`
+  `./distro/scripts/obs-upload.sh advs-greeter-git 2`
 
 ### Ubuntu PPA
 
-- Tree: `distro/ubuntu/dms-greeter-git/` (Provides/Conflicts/Replaces; packs `dms-greeter-git-source/` with vendor + DankCommon).  
-- Stable Ubuntu: `Conflicts: dms-greeter-git` + `override_dh_auto_test`.  
-- Script: `ppa-upload.sh [dms-greeter|dms-greeter-git] [series] [ppa_num]`.  
+- Tree: `distro/ubuntu/advs-greeter-git/` (Provides/Conflicts/Replaces; packs `advs-greeter-git-source/` with vendor + AdvCommon).  
+- Stable Ubuntu: `Conflicts: advs-greeter-git` + `override_dh_auto_test`.  
+- Script: `ppa-upload.sh [advs-greeter|advs-greeter-git] [series] [ppa_num]`.  
 - Workflow: `run-ppa.yml` package dropdown including `both`.  
 - **GPG:** local key imported (`F16508F357F99EE9`); signing works.  
 - **Upload abort (fixed):** `yes | debuild` under `pipefail` exited 141 after sign — now `debuild … </dev/null`.  
-- **Launchpad:** amd64 **succeeded**; arm64 **failed** (~11m, no build log — mid `go build`). Aligned git PPA with **dankcalendar-git** blueprint: bundle `.go-toolchain` in `ppa-upload.sh`, `PATH` in `debian/rules`, `Architecture: any`, drop bogus `include-binaries`. Re-upload with bumped ppa number to prove arm64.
+- **Launchpad:** amd64 **succeeded**; arm64 **failed** (~11m, no build log — mid `go build`). Aligned git PPA with **advcalendar-git** blueprint: bundle `.go-toolchain` in `ppa-upload.sh`, `PATH` in `debian/rules`, `Architecture: any`, drop bogus `include-binaries`. Re-upload with bumped ppa number to prove arm64.
 
 ### Void XBPS / R2
 
-- Template: `distro/void/srcpkgs/dms-greeter-git/` (`conflicts`/`provides`; CI stages tarball).  
-- Stable Void: `conflicts="dms-greeter-git"`.  
-- Workflow: `run-xbps.yml` supports greeter / git / both; `R2_PREFIX=dms` unchanged.  
+- Template: `distro/void/srcpkgs/advs-greeter-git/` (`conflicts`/`provides`; CI stages tarball).  
+- Stable Void: `conflicts="advs-greeter-git"`.  
+- Workflow: `run-xbps.yml` supports greeter / git / both; `R2_PREFIX=advs` unchanged.  
 - **No Void git build/publish yet.**
 
 ### Docs / README
 
-- `danklinux-docs` `docs/dankgreeter/installation.mdx`: stable/git tabs for Fedora, Debian, Ubuntu, openSUSE, Void (written ahead of channel publish — user will push when verified).  
-- `danklinux/index.mdx` (staged earlier): lists `dms-greeter` + `dms-greeter-git`.  
-- dank-greeter `README.md`: mentions git install on OBS/PPA/Void/Copr.
+- `ariadnev-docs` `docs/advgreeter/installation.mdx`: stable/git tabs for Fedora, Debian, Ubuntu, openSUSE, Void (written ahead of channel publish — user will push when verified).  
+- `ariadnev/index.mdx` (staged earlier): lists `advs-greeter` + `advs-greeter-git`.  
+- ariadnev-greeter `README.md`: mentions git install on OBS/PPA/Void/Copr.
 
 ### Secrets (names only — values in GitHub UI)
 
-User has populated dank-greeter Actions secrets. Names:
+User has populated ariadnev-greeter Actions secrets. Names:
 
 `COPR_LOGIN`, `COPR_TOKEN`, `OBS_USERNAME`, `OBS_PASSWORD`, `GPG_PRIVATE_KEY`, `LAUNCHPAD_SSH_PRIVATE_KEY`, `LAUNCHPAD_SSH_LOGIN`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_ACCOUNT_ID`, `XBPS_PRIVATE_KEY`, `APP_ID`, `APP_PRIVATE_KEY`
 
 - `COPR_LOGIN` = opaque API `login=` value only (not username; workflow hardcodes `username = avengemedia`).  
 - `GITHUB_TOKEN` = builtin; do not create as a repo secret.  
-- Local key backup zip: `~/Downloads/API_SSH_Keys.zip` (encrypted danklinux migration archive) + `~/Downloads/Projects/GPG-Keys.zip`.
+- Local key backup zip: `~/Downloads/API_SSH_Keys.zip` (encrypted ariadnev migration archive) + `~/Downloads/Projects/GPG-Keys.zip`.
 
 ### Local smoke already run
 
@@ -114,23 +114,23 @@ User has populated dank-greeter Actions secrets. Names:
 ## Architecture (target)
 
 ```text
-dank-greeter (source + packaging + CI)
+ariadnev-greeter (source + packaging + CI)
     │
-    ├── Copr  → avengemedia/danklinux
-    │             ├── dms-greeter
-    │             └── dms-greeter-git      ← live earlier; keep healthy
-    ├── OBS   → home:AvengeMedia:danklinux
-    │             ├── dms-greeter          ← stable live
-    │             └── dms-greeter-git      ← created; needs Debian-fix rebuild upload
-    ├── PPA   → ppa:avengemedia/danklinux
-    │             ├── dms-greeter          ← stable
-    │             └── dms-greeter-git      ← packaging ready; not uploaded
-    └── Void  → void.danklinux.com/dms/current
-                  ├── dms-greeter
-                  └── dms-greeter-git      ← packaging ready; not published
+    ├── Copr  → avengemedia/ariadnev
+    │             ├── advs-greeter
+    │             └── advs-greeter-git      ← live earlier; keep healthy
+    ├── OBS   → home:bavanchun:ariadnev
+    │             ├── advs-greeter          ← stable live
+    │             └── advs-greeter-git      ← created; needs Debian-fix rebuild upload
+    ├── PPA   → ppa:avengemedia/ariadnev
+    │             ├── advs-greeter          ← stable
+    │             └── advs-greeter-git      ← packaging ready; not uploaded
+    └── Void  → void.ariadnev.vchun.dev/advs/current
+                  ├── advs-greeter
+                  └── advs-greeter-git      ← packaging ready; not published
 ```
 
-Binary for all: `/usr/bin/dms-greeter`.
+Binary for all: `/usr/bin/advs-greeter`.
 
 ---
 
@@ -141,33 +141,33 @@ Packaging code is largely ready. Remaining work is **upload/build proof**, then 
 ### Suggested order
 
 1. **OBS rebuild with Debian fix** (local, uses `~/.config/osc`):  
-   `./distro/scripts/obs-upload.sh dms-greeter-git 2`  
-   Then `./distro/scripts/obs-status.sh dms-greeter-git` until Debian_13 + openSUSE green.
+   `./distro/scripts/obs-upload.sh advs-greeter-git 2`  
+   Then `./distro/scripts/obs-status.sh advs-greeter-git` until Debian_13 + openSUSE green.
 
 2. **PPA git** (local first if GPG + Launchpad ready):  
-   `./distro/scripts/ppa-upload.sh dms-greeter-git resolute`  
+   `./distro/scripts/ppa-upload.sh advs-greeter-git resolute`  
    Watch Launchpad builds.
 
-3. **Void git** — after push or via Actions `run-xbps.yml` with `dms-greeter-git` (needs R2/XBPS secrets in CI). Local xbps-src optional.
+3. **Void git** — after push or via Actions `run-xbps.yml` with `advs-greeter-git` (needs R2/XBPS secrets in CI). Local xbps-src optional.
 
-4. **User review + commit + push** all dank-greeter packaging/workflow changes (and docs when ready).
+4. **User review + commit + push** all ariadnev-greeter packaging/workflow changes (and docs when ready).
 
 5. **Prove GitHub secrets** via `workflow_dispatch`:  
-   - `run-copr.yml` → `dms-greeter-git`  
-   - `run-obs.yml` → `dms-greeter-git`  
-   - `run-ppa.yml` → `dms-greeter-git`  
-   - `run-xbps.yml` → `dms-greeter-git`  
+   - `run-copr.yml` → `advs-greeter-git`  
+   - `run-obs.yml` → `advs-greeter-git`  
+   - `run-ppa.yml` → `advs-greeter-git`  
+   - `run-xbps.yml` → `advs-greeter-git`  
    Local scripts prove local creds/builds; **only Actions prove repo secrets**.
 
 6. **Docs:** already drafted for git installs; only push/publish docs once channels actually ship (or keep as-is per user preference to ship together).
 
 ### Design constraints (unchanged)
 
-- Package name `dms-greeter-git`; mutual Conflicts; Prefer Provides `dms-greeter`.  
-- Pack `dank-qml-common`; restore `quickshell/DankCommon` symlink.  
+- Package name `advs-greeter-git`; mutual Conflicts; Prefer Provides `advs-greeter`.  
+- Pack `ariadnev-qml-common`; restore `quickshell/AdvCommon` symlink.  
 - OBS Debian/openSUSE: offline → vendor + bundled Go.  
 - PPA: distro `golang-go` + vendored tree in native source.  
-- Void: `R2_PREFIX=dms`; coordinate with dms Void publishes.  
+- Void: `R2_PREFIX=advs`; coordinate with advs Void publishes.  
 - Do not force-republish stable unless asked.
 
 ### Gotchas already hit
@@ -177,17 +177,17 @@ Packaging code is largely ready. Remaining work is **upload/build proof**, then 
 | `sed` dies on Version `1.0.0+git…` in `obs-upload.sh` | Python rewriter in `update_opensuse_git_spec` |
 | `GO_VER=$(stage_go_toolchains)` polluted by stdout logs | Status → stderr; validate version token |
 | OBS Debian `go: not found` in `dh_auto_test` | `override_dh_auto_test` in debian/ubuntu rules |
-| `ppa-upload.sh dms-greeter-git` was unknown | Script now accepts package name |
+| `ppa-upload.sh advs-greeter-git` was unknown | Script now accepts package name |
 | (was) bare `2` ignored as message | Fixed: bare integer sets rebuild; `--rebuild=N` still works |
 | Empty `git describe` (no tags) | Fallback base `1.0.0` |
 | PPA `yes \| debuild` → exit 141 after sign | Drop `yes`; `debuild … </dev/null` |
 
 ### Reference files
 
-- Fedora: `distro/fedora/dms-greeter-git.spec`, `distro/scripts/copr-upload.sh`  
-- OBS: `distro/opensuse/dms-greeter-git.spec`, `distro/debian/dms-greeter-git/`, `distro/scripts/obs-upload.sh`  
-- PPA: `distro/ubuntu/dms-greeter-git/`, `distro/scripts/ppa-upload.sh`  
-- Void: `distro/void/srcpkgs/dms-greeter-git/`, `.github/workflows/run-xbps.yml`  
+- Fedora: `distro/fedora/advs-greeter-git.spec`, `distro/scripts/copr-upload.sh`  
+- OBS: `distro/opensuse/advs-greeter-git.spec`, `distro/debian/advs-greeter-git/`, `distro/scripts/obs-upload.sh`  
+- PPA: `distro/ubuntu/advs-greeter-git/`, `distro/scripts/ppa-upload.sh`  
+- Void: `distro/void/srcpkgs/advs-greeter-git/`, `.github/workflows/run-xbps.yml`  
 - Workflows: `.github/workflows/run-{copr,obs,ppa,xbps}.yml`
 
 ---
@@ -195,10 +195,10 @@ Packaging code is largely ready. Remaining work is **upload/build proof**, then 
 ## Verification checklist
 
 - [ ] User reviewed/committed packaging + workflow changes  
-- [ ] OBS `dms-greeter-git` rebuild uploaded; Debian_13 + openSUSE all green  
-- [ ] PPA `dms-greeter-git` uploaded and Launchpad build succeeded  
-- [ ] Void `dms-greeter-git` built and published to `void.danklinux.com/dms/current`  
-- [ ] Actions dispatch proves Copr/OBS/PPA/Void secrets on dank-greeter  
+- [ ] OBS `advs-greeter-git` rebuild uploaded; Debian_13 + openSUSE all green  
+- [ ] PPA `advs-greeter-git` uploaded and Launchpad build succeeded  
+- [ ] Void `advs-greeter-git` built and published to `void.ariadnev.vchun.dev/advs/current`  
+- [ ] Actions dispatch proves Copr/OBS/PPA/Void secrets on ariadnev-greeter  
 - [ ] `dnf` / `apt` / `zypper` / `xbps-install` git install paths work  
 - [ ] No secrets markdown or Co-authored-by in agent-touched commits  
 - [ ] Docs pushed only when channels match documented install steps (or intentionally ahead)
@@ -207,12 +207,12 @@ Packaging code is largely ready. Remaining work is **upload/build proof**, then 
 
 ## Out of scope (still)
 
-- AUR `greetd-dms-greeter-git` / `-bin` (external).  
+- AUR `greetd-advs-greeter-git` / `-bin` (external).  
 - Republishing stable greeter until next tag (unless user asks).  
-- Changing Void `R2_PREFIX` away from `dms`.
+- Changing Void `R2_PREFIX` away from `advs`.
 
 ---
 
 ## Handoff one-liner
 
-**In-tree `dms-greeter-git` packaging for Copr/OBS/PPA/Void is ready locally (uncommitted); OBS package exists but needs rebuild `2` after the Debian `dh_auto_test` fix; PPA and Void git uploads not started; secrets are in GitHub — prove them with Actions after user push; do not commit unless asked.**
+**In-tree `advs-greeter-git` packaging for Copr/OBS/PPA/Void is ready locally (uncommitted); OBS package exists but needs rebuild `2` after the Debian `dh_auto_test` fix; PPA and Void git uploads not started; secrets are in GitHub — prove them with Actions after user push; do not commit unless asked.**

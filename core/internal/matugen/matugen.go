@@ -1,7 +1,7 @@
-// Package matugen generates the greeter's dms-colors.json from a wallpaper
-// image via the matugen CLI, injecting the dank16 palette. It is the
-// colors-only slice of the DMS matugen pipeline; the dank.json template is
-// embedded so no DMS quickshell tree is required.
+// Package matugen generates the greeter's advs-colors.json from a wallpaper
+// image via the matugen CLI, injecting the adv16 palette. It is the
+// colors-only slice of the ADVS matugen pipeline; the adv.json template is
+// embedded so no ADVS quickshell tree is required.
 package matugen
 
 import (
@@ -19,8 +19,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AvengeMedia/dank-greeter/core/internal/dank16"
-	"github.com/AvengeMedia/dank-greeter/core/internal/utils"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/adv16"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/utils"
 	log "github.com/AvengeMedia/dankgo/log"
 )
 
@@ -33,8 +33,8 @@ const (
 	ColorModeLight ColorMode = "light"
 )
 
-//go:embed templates/dank.json
-var dankColorsTemplate []byte
+//go:embed templates/adv.json
+var advColorsTemplate []byte
 
 var (
 	matugenVersionMu   sync.Mutex
@@ -52,7 +52,7 @@ type Options struct {
 }
 
 func (o *Options) ColorsOutput() string {
-	return filepath.Join(o.StateDir, "dms-colors.json")
+	return filepath.Join(o.StateDir, "advs-colors.json")
 }
 
 func (o *Options) colorsStaging() string {
@@ -134,19 +134,19 @@ func Run(opts Options) error {
 func buildOnce(opts *Options) (bool, error) {
 	defer os.Remove(opts.colorsStaging())
 
-	tmpDir, err := os.MkdirTemp("", "dms-greeter-matugen-*")
+	tmpDir, err := os.MkdirTemp("", "advs-greeter-matugen-*")
 	if err != nil {
 		return false, fmt.Errorf("failed to create temp dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	templatePath := filepath.Join(tmpDir, "dank.json")
-	if err := os.WriteFile(templatePath, dankColorsTemplate, 0o644); err != nil {
+	templatePath := filepath.Join(tmpDir, "adv.json")
+	if err := os.WriteFile(templatePath, advColorsTemplate, 0o644); err != nil {
 		return false, fmt.Errorf("failed to write colors template: %w", err)
 	}
 
 	cfgPath := filepath.Join(tmpDir, "config.toml")
-	cfg := fmt.Sprintf("[config]\n\n[templates.dank]\ninput_path = '%s'\noutput_path = '%s'\n", templatePath, opts.colorsStaging())
+	cfg := fmt.Sprintf("[config]\n\n[templates.adv]\ninput_path = '%s'\noutput_path = '%s'\n", templatePath, opts.colorsStaging())
 	if err := os.WriteFile(cfgPath, []byte(cfg), 0o644); err != nil {
 		return false, fmt.Errorf("failed to write matugen config: %w", err)
 	}
@@ -168,7 +168,7 @@ func buildOnce(opts *Options) (bool, error) {
 		primaryLight = primaryDark
 	}
 
-	importData := fmt.Sprintf(`{"dank16": %s}`, generateDank16Variants(primaryDark, primaryLight, surface, opts.Mode))
+	importData := fmt.Sprintf(`{"adv16": %s}`, generateAdv16Variants(primaryDark, primaryLight, surface, opts.Mode))
 
 	var args []string
 	switch opts.Kind {
@@ -368,13 +368,13 @@ func extractMatugenColor(jsonStr, colorName, variant string) string {
 	return variantData
 }
 
-func generateDank16Variants(primaryDark, primaryLight, surface string, mode ColorMode) string {
-	variantColors := dank16.GenerateVariantPalette(dank16.VariantOptions{
+func generateAdv16Variants(primaryDark, primaryLight, surface string, mode ColorMode) string {
+	variantColors := adv16.GenerateVariantPalette(adv16.VariantOptions{
 		PrimaryDark:  primaryDark,
 		PrimaryLight: primaryLight,
 		Background:   surface,
 		UseDPS:       true,
 		IsLightMode:  mode == ColorModeLight,
 	})
-	return dank16.GenerateVariantJSON(variantColors)
+	return adv16.GenerateVariantJSON(variantColors)
 }

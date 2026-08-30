@@ -1,28 +1,28 @@
 #!/bin/bash
 set -euo pipefail
 
-# Build SRPM and upload to Copr (avengemedia/danklinux).
+# Build SRPM and upload to Copr (avengemedia/ariadnev).
 # Stable: release tarball from GitHub. Git: current checkout + submodule.
 #
 # Usage:
-#   ./distro/scripts/copr-upload.sh [dms-greeter|dms-greeter-git] [VERSION] [RELEASE]
+#   ./distro/scripts/copr-upload.sh [advs-greeter|advs-greeter-git] [VERSION] [RELEASE]
 #
 # Examples:
 #   ./distro/scripts/copr-upload.sh                         # stable, latest release, release 1
-#   ./distro/scripts/copr-upload.sh dms-greeter 1.0.0 2    # stable, explicit version/rebuild
-#   ./distro/scripts/copr-upload.sh dms-greeter-git        # git snapshot from HEAD (release 1)
-#   ./distro/scripts/copr-upload.sh dms-greeter-git 2      # git snapshot, RPM release 2 (same commit rebuild)
+#   ./distro/scripts/copr-upload.sh advs-greeter 1.0.0 2    # stable, explicit version/rebuild
+#   ./distro/scripts/copr-upload.sh advs-greeter-git        # git snapshot from HEAD (release 1)
+#   ./distro/scripts/copr-upload.sh advs-greeter-git 2      # git snapshot, RPM release 2 (same commit rebuild)
 
-REPO="AvengeMedia/dank-greeter"
-COPR_PROJECT="avengemedia/danklinux"
+REPO="bavanchun/ariadnev-greeter"
+COPR_PROJECT="avengemedia/ariadnev"
 
-PACKAGE="dms-greeter"
+PACKAGE="advs-greeter"
 VERSION=""
 RELEASE="1"
 
 for arg in "$@"; do
     case "$arg" in
-    dms-greeter|dms-greeter-git)
+    advs-greeter|advs-greeter-git)
         PACKAGE="$arg"
         ;;
     "")
@@ -83,7 +83,7 @@ build_stable() {
 
     echo "Building ${PACKAGE} v${VERSION}-${RELEASE} SRPM for Copr..."
 
-    local tarball="dank-greeter-${VERSION}.tar.gz"
+    local tarball="ariadnev-greeter-${VERSION}.tar.gz"
     if [[ ! -f ~/rpmbuild/SOURCES/"$tarball" ]]; then
         echo "Downloading source tarball for v${VERSION}..."
         wget -O ~/rpmbuild/SOURCES/"$tarball" \
@@ -115,8 +115,8 @@ build_stable() {
 }
 
 build_git() {
-    if [[ ! -e "$REPO_ROOT/dank-qml-common/DankCommon/Widgets/DankIcon.qml" ]]; then
-        echo "ERROR: dank-qml-common submodule missing. Run: git submodule update --init"
+    if [[ ! -e "$REPO_ROOT/ariadnev-qml-common/AdvCommon/Widgets/AdvIcon.qml" ]]; then
+        echo "ERROR: ariadnev-qml-common submodule missing. Run: git submodule update --init"
         exit 1
     fi
 
@@ -146,12 +146,12 @@ build_git() {
 
     mkdir -p "$tmp_pack/${src_dir_safe}"
     git archive --format=tar HEAD | tar -x -C "$tmp_pack/${src_dir_safe}"
-    rm -rf "$tmp_pack/${src_dir_safe}/dank-qml-common"
-    mkdir -p "$tmp_pack/${src_dir_safe}/dank-qml-common"
-    tar -C "$REPO_ROOT/dank-qml-common" --exclude='.git' -cf - . \
-        | tar -C "$tmp_pack/${src_dir_safe}/dank-qml-common" -xf -
-    rm -rf "$tmp_pack/${src_dir_safe}/quickshell/DankCommon"
-    ln -sfn ../dank-qml-common/DankCommon "$tmp_pack/${src_dir_safe}/quickshell/DankCommon"
+    rm -rf "$tmp_pack/${src_dir_safe}/ariadnev-qml-common"
+    mkdir -p "$tmp_pack/${src_dir_safe}/ariadnev-qml-common"
+    tar -C "$REPO_ROOT/ariadnev-qml-common" --exclude='.git' -cf - . \
+        | tar -C "$tmp_pack/${src_dir_safe}/ariadnev-qml-common" -xf -
+    rm -rf "$tmp_pack/${src_dir_safe}/quickshell/AdvCommon"
+    ln -sfn ../ariadnev-qml-common/AdvCommon "$tmp_pack/${src_dir_safe}/quickshell/AdvCommon"
 
     local tarball="${PACKAGE}-${version}.tar.gz"
     tar -C "$tmp_pack" -czf ~/rpmbuild/SOURCES/"$tarball" "${src_dir_safe}"
@@ -159,8 +159,8 @@ build_git() {
     trap - EXIT
 
     tar -C "$REPO_ROOT" \
-        --exclude='dank-qml-common/.git' \
-        -czf ~/rpmbuild/SOURCES/dank-qml-common.tar.gz dank-qml-common
+        --exclude='ariadnev-qml-common/.git' \
+        -czf ~/rpmbuild/SOURCES/ariadnev-qml-common.tar.gz ariadnev-qml-common
 
     local arch go_tgz
     for arch in amd64 arm64; do
@@ -177,7 +177,7 @@ build_git() {
         -e "s|%global go_toolchain_version .*|%global go_toolchain_version ${go_ver}|" \
         -e "s|VCS:            {{{ git_repo_vcs }}}|VCS:            ${vcs_url}|" \
         -e "s|Source0:        {{{ git_repo_pack }}}|Source0:        ${tarball}|" \
-        -e "s|Source3:        {{{ git_pack path=\$GIT_ROOT/dank-qml-common dir_name=dank-qml-common source_name=dank-qml-common.tar.gz }}}|Source3:        dank-qml-common.tar.gz|" \
+        -e "s|Source3:        {{{ git_pack path=\$GIT_ROOT/ariadnev-qml-common dir_name=ariadnev-qml-common source_name=ariadnev-qml-common.tar.gz }}}|Source3:        ariadnev-qml-common.tar.gz|" \
         -e "s|{{{ git_repo_setup_macro }}}|%setup -q -n ${src_dir_safe}|" \
         -e "s|RELEASE_PLACEHOLDER|${RELEASE}|g" \
         "$SPEC_SRC" > "$expanded"
@@ -190,8 +190,8 @@ date, version, release = sys.argv[2], sys.argv[3], sys.argv[4]
 text = path.read_text()
 marker = "{{{ git_repo_changelog }}}"
 entry = (
-    f"* {date} AvengeMedia <contact@avengemedia.com> - 2:{version}-{release}\n"
-    f"- Git snapshot build from dank-greeter ({version})\n"
+    f"* {date} VChun <hoangbavan4478@gmail.com> - 2:{version}-{release}\n"
+    f"- Git snapshot build from ariadnev-greeter ({version})\n"
 )
 if marker not in text:
     raise SystemExit("ERROR: git_repo_changelog macro not found in expanded spec")

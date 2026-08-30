@@ -1,0 +1,292 @@
+# Spec for ADVS Greeter - Git builds using rpkg macros (Fedora/Copr)
+# Package name is advs-greeter-git so it can coexist in avengemedia/ariadnev
+# beside stable advs-greeter. Mutual Conflicts only — never Obsoletes stable:
+# both packages live in the same Copr, and Obsoletes makes `dnf update`
+# replace stable with git unprompted.
+
+%global debug_package %{nil}
+%global version {{{ git_repo_version }}}
+%global pkg_summary ADVS Greeter for greetd (git)
+%global go_toolchain_version 1.26.4
+
+Name:           advs-greeter-git
+Epoch:          2
+Version:        %{version}
+Release:        RELEASE_PLACEHOLDER%{?dist}
+Summary:        %{pkg_summary}
+
+License:        MIT
+URL:            https://github.com/bavanchun/ariadnev-greeter
+VCS:            {{{ git_repo_vcs }}}
+Source0:        {{{ git_repo_pack }}}
+Source1:        https://go.dev/dl/go%{go_toolchain_version}.linux-amd64.tar.gz
+Source2:        https://go.dev/dl/go%{go_toolchain_version}.linux-arm64.tar.gz
+# git_repo_pack archives skip submodule content, so pack ariadnev-qml-common separately
+Source3:        {{{ git_pack path=$GIT_ROOT/ariadnev-qml-common dir_name=ariadnev-qml-common source_name=ariadnev-qml-common.tar.gz }}}
+
+BuildRequires:  git-core
+BuildRequires:  gzip
+BuildRequires:  make
+BuildRequires:  systemd-rpm-macros
+
+Requires:       greetd
+Requires:       (quickshell-git or quickshell)
+Requires:       policycoreutils-python-utils
+Requires(post): /usr/sbin/useradd
+Requires(post): /usr/sbin/groupadd
+
+Provides:       advs-greeter = %{epoch}:%{version}-%{release}
+Conflicts:      advs-greeter
+
+Recommends:     acl
+Suggests:       niri
+Suggests:       hyprland
+Suggests:       sway
+
+%description
+ADVS Greeter is a greetd login screen with the Adv Material aesthetic.
+This git package builds from the tip of the ariadnev-greeter repository.
+A single Go binary with the Quickshell UI embedded; the UI is extracted
+to the greeter cache directory at startup.
+
+Supports multiple compositors including Niri, Hyprland, Mango, and Sway with
+session selection, user authentication, and dynamic theming synced from
+AriadnevShell.
+
+Conflicts with the stable advs-greeter package; both install /usr/bin/advs-greeter.
+Switch explicitly with: dnf swap advs-greeter advs-greeter-git
+
+%prep
+{{{ git_repo_setup_macro }}}
+rm -rf ariadnev-qml-common
+tar -xzf %{SOURCE3}
+# git_repo_pack may leave an empty submodule dir or a dangling symlink;
+# restore quickshell/AdvCommon → ../ariadnev-qml-common/AdvCommon
+rm -rf quickshell/AdvCommon
+ln -sfn ../ariadnev-qml-common/AdvCommon quickshell/AdvCommon
+test -e quickshell/AdvCommon/Widgets/AdvIcon.qml || { echo "AdvCommon missing after submodule unpack"; exit 1; }
+
+%build
+VERSION="%{version}"
+COMMIT=$(echo "%{version}" | grep -oP '[a-f0-9]{7,}' | head -n1 || echo "unknown")
+
+# Use pinned bundled Go toolchain (deterministic across chroots)
+case "%{_arch}" in
+  x86_64)
+    GO_TARBALL="%{_sourcedir}/go%{go_toolchain_version}.linux-amd64.tar.gz"
+    ;;
+  aarch64)
+    GO_TARBALL="%{_sourcedir}/go%{go_toolchain_version}.linux-arm64.tar.gz"
+    ;;
+  *)
+    echo "Unsupported architecture for bundled Go: %{_arch}"
+    exit 1
+    ;;
+esac
+
+rm -rf .go
+tar -xzf "$GO_TARBALL"
+mv go .go
+export GOROOT="$PWD/.go"
+export PATH="$GOROOT/bin:$PATH"
+export GOTOOLCHAIN=local
+export HOME=%{_builddir}/go-home
+export GOCACHE=%{_builddir}/go-cache
+export GOMODCACHE=%{_builddir}/go-mod
+mkdir -p "$HOME" "$GOCACHE" "$GOMODCACHE"
+go version
+
+# Prefer vendored deps when present (release-style trees); otherwise allow module download
+if [ -d core/vendor ]; then
+  export GOFLAGS=-mod=vendor
+  GO_VERSION=$(go env GOVERSION | sed -E 's/^go([0-9]+\.[0-9]+).*/\1/')
+  sed -E -i "s/^go 1\.[0-9]+(\.[0-9]+)?/go $GO_VERSION/" core/go.mod
+  sed -E -i "s/^(## explicit; go )1\.[0-9]+(\.[0-9]+)?$/\1$GO_VERSION/" core/vendor/modules.txt
+  sed -E -i '/^toolchain go[0-9.]+$/d' core/go.mod
+fi
+
+make -C core build VERSION="$VERSION" COMMIT="$COMMIT"
+
+%install
+install -Dm755 core/bin/advs-greeter %{buildroot}%{_bindir}/advs-greeter
+
+install -d %{buildroot}%{_datadir}/bash-completion/completions
+install -d %{buildroot}%{_datadir}/zsh/site-functions
+install -d %{buildroot}%{_datadir}/fish/vendor_completions.d
+core/bin/advs-greeter completion bash > %{buildroot}%{_datadir}/bash-completion/completions/advs-greeter
+core/bin/advs-greeter completion zsh > %{buildroot}%{_datadir}/zsh/site-functions/_advs-greeter
+core/bin/advs-greeter completion fish > %{buildroot}%{_datadir}/fish/vendor_completions.d/advs-greeter.fish
+
+install -Dpm0644 assets/systemd/sysusers-advs-greeter.conf %{buildroot}%{_sysusersdir}/advs-greeter.conf
+install -Dpm0644 assets/systemd/tmpfiles-advs-greeter.conf %{buildroot}%{_tmpfilesdir}/advs-greeter.conf
+
+install -Dm644 LICENSE %{buildroot}%{_docdir}/advs-greeter/LICENSE
+install -Dm644 README.md %{buildroot}%{_docdir}/advs-greeter/README.md
+install -d %{buildroot}%{_docdir}/advs-greeter/examples
+install -m644 assets/examples/* %{buildroot}%{_docdir}/advs-greeter/examples/
+
+install -dm755 %{buildroot}%{_sharedstatedir}/greeter
+install -dm750 %{buildroot}%{_localstatedir}/cache/advs-greeter
+
+%files
+%dir %{_docdir}/advs-greeter
+%license %{_docdir}/advs-greeter/LICENSE
+%doc %{_docdir}/advs-greeter/README.md
+%doc %{_docdir}/advs-greeter/examples
+%{_bindir}/advs-greeter
+%{_datadir}/bash-completion/completions/advs-greeter
+%{_datadir}/zsh/site-functions/_advs-greeter
+%{_datadir}/fish/vendor_completions.d/advs-greeter.fish
+%{_sysusersdir}/advs-greeter.conf
+%{_tmpfilesdir}/advs-greeter.conf
+%dir %attr(0755,greeter,greeter) %{_sharedstatedir}/greeter
+%dir %attr(0750,greeter,greeter) %{_localstatedir}/cache/advs-greeter
+
+%pre
+# Create greeter user/group if they don't exist
+getent group greeter >/dev/null || groupadd -r greeter
+getent passwd greeter >/dev/null || \
+    useradd -r -g greeter -d %{_sharedstatedir}/greeter -s /bin/bash \
+    -c "System Greeter" greeter
+exit 0
+
+%post
+
+# Set SELinux contexts for greeter files on Fedora systems
+if [ -x /usr/sbin/semanage ] && [ -x /usr/sbin/restorecon ]; then
+    semanage fcontext -a -t bin_t '%{_bindir}/advs-greeter' >/dev/null 2>&1 || true
+    restorecon %{_bindir}/advs-greeter >/dev/null 2>&1 || true
+
+    semanage fcontext -a -t user_home_dir_t '%{_sharedstatedir}/greeter(/.*)?' >/dev/null 2>&1 || true
+    restorecon -R %{_sharedstatedir}/greeter >/dev/null 2>&1 || true
+
+    semanage fcontext -a -t cache_home_t '%{_localstatedir}/cache/advs-greeter(/.*)?' >/dev/null 2>&1 || true
+    restorecon -R %{_localstatedir}/cache/advs-greeter >/dev/null 2>&1 || true
+
+    restorecon %{_sysconfdir}/pam.d/greetd >/dev/null 2>&1 || true
+fi
+
+chown -R greeter:greeter %{_localstatedir}/cache/advs-greeter 2>/dev/null || true
+chown -R greeter:greeter %{_sharedstatedir}/greeter 2>/dev/null || true
+
+PAM_CONFIG="/etc/pam.d/greetd"
+if [ ! -f "$PAM_CONFIG" ]; then
+    cat > "$PAM_CONFIG" << 'PAM_EOF'
+#%PAM-1.0
+auth       substack    system-auth
+auth       include     postlogin
+
+account    required    pam_nologin.so
+account    include     system-auth
+
+password   include     system-auth
+
+session    required    pam_selinux.so close
+session    required    pam_loginuid.so
+session    required    pam_selinux.so open
+session    optional    pam_keyinit.so force revoke
+session    include     system-auth
+session    include     postlogin
+PAM_EOF
+    chmod 644 "$PAM_CONFIG"
+    [ "$1" -eq 1 ] && echo "Created PAM configuration for greetd"
+elif ! grep -q "pam_systemd\|system-auth" "$PAM_CONFIG"; then
+    cp "$PAM_CONFIG" "$PAM_CONFIG.backup-advs-greeter"
+    cat > "$PAM_CONFIG" << 'PAM_EOF'
+#%PAM-1.0
+auth       substack    system-auth
+auth       include     postlogin
+
+account    required    pam_nologin.so
+account    include     system-auth
+
+password   include     system-auth
+
+session    required    pam_selinux.so close
+session    required    pam_loginuid.so
+session    required    pam_selinux.so open
+session    optional    pam_keyinit.so force revoke
+session    include     system-auth
+session    include     postlogin
+PAM_EOF
+    chmod 644 "$PAM_CONFIG"
+    [ "$1" -eq 1 ] && echo "Updated PAM configuration (old config backed up to $PAM_CONFIG.backup-advs-greeter)"
+fi
+
+GREETD_CONFIG="/etc/greetd/config.toml"
+CONFIG_STATUS="Not modified (already configured)"
+
+COMPOSITOR="niri"
+if ! command -v niri >/dev/null 2>&1; then
+        if command -v Hyprland >/dev/null 2>&1; then
+                COMPOSITOR="hyprland"
+        fi
+fi
+
+if [ ! -f "$GREETD_CONFIG" ]; then
+        mkdir -p /etc/greetd
+        cat > "$GREETD_CONFIG" << 'GREETD_EOF'
+[terminal]
+vt = 1
+
+[default_session]
+user = "greeter"
+command = "/usr/bin/advs-greeter --command COMPOSITOR_PLACEHOLDER"
+GREETD_EOF
+        sed -i "s|COMPOSITOR_PLACEHOLDER|$COMPOSITOR|" "$GREETD_CONFIG"
+        CONFIG_STATUS="Created new config with $COMPOSITOR ✓"
+
+elif ! grep -q "advs-greeter" "$GREETD_CONFIG"; then
+        BACKUP_FILE="${GREETD_CONFIG}.backup-$(date +%%Y%%m%%d-%%H%%M%%S)"
+        cp "$GREETD_CONFIG" "$BACKUP_FILE" 2>/dev/null || true
+
+        sed -i "/^\[default_session\]/,/^\[/ s|^command =.*|command = \"/usr/bin/advs-greeter --command $COMPOSITOR\"|" "$GREETD_CONFIG"
+        sed -i '/^\[default_session\]/,/^\[/ s|^user =.*|user = "greeter"|' "$GREETD_CONFIG"
+        CONFIG_STATUS="Updated existing config (backed up) with $COMPOSITOR ✓"
+fi
+
+CURRENT_TARGET=$(systemctl get-default 2>/dev/null || echo "unknown")
+if [ "$CURRENT_TARGET" != "graphical.target" ]; then
+	systemctl set-default graphical.target >/dev/null 2>&1 || true
+	TARGET_STATUS="Set to graphical.target (was: $CURRENT_TARGET) ✓"
+else
+	TARGET_STATUS="Already graphical.target ✓"
+fi
+
+if [ "$1" -eq 1 ]; then
+cat << 'EOF'
+
+=========================================================================
+        ADVS Greeter Git Package Installed
+=========================================================================
+
+Status:
+EOF
+echo "    ✓ Greetd config: $CONFIG_STATUS"
+echo "    ✓ Default target: $TARGET_STATUS"
+cat << 'EOF'
+    ✓ Greeter runtime account and directories prepared
+
+Finish setup before rebooting:
+1. Enable greetd and prepare runtime permissions/security labels:
+     advs-greeter enable
+
+2. Sync your existing ADVS theme and settings to the greeter after reboot:
+     advs-greeter sync
+
+Verify with: advs-greeter status
+Documentation: https://ariadnev.vchun.dev/docs/advgreeter/
+=========================================================================
+
+EOF
+fi
+
+%postun
+if [ "$1" -eq 0 ] && [ -x /usr/sbin/semanage ]; then
+    semanage fcontext -d '%{_bindir}/advs-greeter' 2>/dev/null || true
+    semanage fcontext -d '%{_sharedstatedir}/greeter(/.*)?' 2>/dev/null || true
+    semanage fcontext -d '%{_localstatedir}/cache/advs-greeter(/.*)?' 2>/dev/null || true
+fi
+
+%changelog
+{{{ git_repo_changelog }}}

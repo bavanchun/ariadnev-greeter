@@ -12,7 +12,7 @@ Singleton {
     id: root
     readonly property var log: Log.scoped("GreetdSettings")
 
-    readonly property string _greeterCacheDir: Quickshell.env("DMS_GREET_CFG_DIR") || "/var/cache/dms-greeter"
+    readonly property string _greeterCacheDir: Quickshell.env("ADVS_GREET_CFG_DIR") || "/var/cache/advs-greeter"
 
     property string configBaseDir: root._greeterCacheDir
     property string configHomeDir: ""
@@ -109,8 +109,8 @@ Singleton {
                 settings = JSON.parse(content);
             }
 
-            const envRememberLastSession = GreetdEnv.readBoolOverride(Quickshell.env, ["DMS_GREET_REMEMBER_LAST_SESSION", "DMS_SAVE_SESSION"], undefined, log);
-            const envRememberLastUser = GreetdEnv.readBoolOverride(Quickshell.env, ["DMS_GREET_REMEMBER_LAST_USER", "DMS_SAVE_USERNAME"], undefined, log);
+            const envRememberLastSession = GreetdEnv.readBoolOverride(Quickshell.env, ["ADVS_GREET_REMEMBER_LAST_SESSION", "ADVS_SAVE_SESSION"], undefined, log);
+            const envRememberLastUser = GreetdEnv.readBoolOverride(Quickshell.env, ["ADVS_GREET_REMEMBER_LAST_USER", "ADVS_SAVE_USERNAME"], undefined, log);
 
             currentThemeName = settings.currentThemeName !== undefined ? settings.currentThemeName : "purple";
             customThemeFile = settings.customThemeFile !== undefined ? settings.customThemeFile : "";

@@ -1,0 +1,66 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+DEB_VERSION := $(shell dpkg-parsechangelog -S Version)
+UPSTREAM_VERSION := $(shell echo $(DEB_VERSION) | sed 's/^[0-9]*://; s/ppa[0-9]*$$//')
+COMMIT_HASH := $(shell echo $(UPSTREAM_VERSION) | sed -n 's/.*\.\([a-f0-9]\{7,8\}\)$$/\1/p')
+SRCDIR := advs-greeter-git-source
+
+# Go needs writable directories for its caches
+export HOME := $(CURDIR)/debian/tmp-home
+export GOCACHE := $(CURDIR)/debian/tmp-home/go-cache
+export GOMODCACHE := $(CURDIR)/debian/tmp-home/go-mod
+
+# Launchpad has no network access: dependencies are vendored in the source
+# tree and the distro golang-go toolchain is used as-is (same as stable).
+export GOTOOLCHAIN := local
+export GOFLAGS := -mod=vendor
+
+%:
+	dh $@
+
+override_dh_auto_test:
+	@echo "Skipping dh_auto_test (Launchpad offline; tests run in CI)"
+
+override_dh_auto_build:
+	mkdir -p $(HOME) $(GOCACHE) $(GOMODCACHE)
+
+	test -d $(SRCDIR)/core || (echo "ERROR: $(SRCDIR)/core not found!" && exit 1)
+	test -d $(SRCDIR)/core/vendor || (echo "ERROR: vendored Go dependencies missing!" && exit 1)
+	test -e $(SRCDIR)/quickshell/AdvCommon/Widgets/AdvIcon.qml || (echo "ERROR: AdvCommon missing!" && exit 1)
+
+	# Align the go directive (and vendored annotations) with the distro toolchain
+	GO_VERSION=$$(go env GOVERSION | sed -E 's/^go([0-9]+\.[0-9]+).*/\1/'); \
+	if [ -n "$$GO_VERSION" ]; then \
+		sed -E -i "s/^go 1\.[0-9]+(\.[0-9]+)?/go $$GO_VERSION/" $(SRCDIR)/core/go.mod; \
+		sed -E -i "s/^(## explicit; go )1\.[0-9]+(\.[0-9]+)?$$/\1$$GO_VERSION/" $(SRCDIR)/core/vendor/modules.txt; \
+	fi
+	sed -E -i '/^toolchain go[0-9.]+$$/d' $(SRCDIR)/core/go.mod
+
+	$(MAKE) -C $(SRCDIR)/core build VERSION="$(UPSTREAM_VERSION)" COMMIT="$(COMMIT_HASH)"
+
+override_dh_auto_install:
+	install -Dm755 $(SRCDIR)/core/bin/advs-greeter debian/advs-greeter-git/usr/bin/advs-greeter
+
+	install -d debian/advs-greeter-git/usr/share/bash-completion/completions
+	install -d debian/advs-greeter-git/usr/share/zsh/vendor-completions
+	install -d debian/advs-greeter-git/usr/share/fish/vendor_completions.d
+	$(SRCDIR)/core/bin/advs-greeter completion bash > debian/advs-greeter-git/usr/share/bash-completion/completions/advs-greeter
+	$(SRCDIR)/core/bin/advs-greeter completion zsh > debian/advs-greeter-git/usr/share/zsh/vendor-completions/_advs-greeter
+	$(SRCDIR)/core/bin/advs-greeter completion fish > debian/advs-greeter-git/usr/share/fish/vendor_completions.d/advs-greeter.fish
+
+	install -Dpm0644 $(SRCDIR)/assets/systemd/sysusers-advs-greeter.conf \
+		debian/advs-greeter-git/usr/lib/sysusers.d/advs-greeter.conf
+	install -Dpm0644 $(SRCDIR)/assets/systemd/tmpfiles-advs-greeter.conf \
+		debian/advs-greeter-git/usr/lib/tmpfiles.d/advs-greeter.conf
+
+	install -Dm644 $(SRCDIR)/README.md debian/advs-greeter-git/usr/share/doc/advs-greeter/README.md
+	install -Dm644 $(SRCDIR)/LICENSE debian/advs-greeter-git/usr/share/doc/advs-greeter/LICENSE
+	install -d debian/advs-greeter-git/usr/share/doc/advs-greeter/examples
+	install -m644 $(SRCDIR)/assets/examples/* debian/advs-greeter-git/usr/share/doc/advs-greeter/examples/
+
+override_dh_auto_clean:
+	rm -rf $(SRCDIR)/core/bin $(SRCDIR)/core/internal/shellembed/dist
+	rm -rf debian/tmp-home
+	dh_auto_clean

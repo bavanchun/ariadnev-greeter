@@ -13,26 +13,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AvengeMedia/dank-greeter/core/internal/config"
-	"github.com/AvengeMedia/dank-greeter/core/internal/distros"
-	"github.com/AvengeMedia/dank-greeter/core/internal/matugen"
-	"github.com/AvengeMedia/dank-greeter/core/internal/privesc"
-	"github.com/AvengeMedia/dank-greeter/core/internal/utils"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/config"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/distros"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/matugen"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/privesc"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/utils"
 	"github.com/sblinch/kdl-go"
 	"github.com/sblinch/kdl-go/document"
 )
 
-//go:embed assets/apparmor/usr.bin.dms-greeter
+//go:embed assets/apparmor/usr.bin.advs-greeter
 var appArmorProfileData []byte
 
-const appArmorProfileDest = "/etc/apparmor.d/usr.bin.dms-greeter"
+const appArmorProfileDest = "/etc/apparmor.d/usr.bin.advs-greeter"
 
-const LocalGreeterBinaryPath = "/usr/local/bin/dms-greeter-local"
+const LocalGreeterBinaryPath = "/usr/local/bin/advs-greeter-local"
 
-const GreeterCacheDir = "/var/cache/dms-greeter"
+const GreeterCacheDir = "/var/cache/advs-greeter"
 
 // IsNixOS returns true when running on NixOS, which manages PAM configs through
-// its module system. The DMS PAM managed block won't be written on NixOS.
+// its module system. The ADVS PAM managed block won't be written on NixOS.
 func IsNixOS() bool {
 	_, err := os.Stat("/etc/NIXOS")
 	return err == nil
@@ -253,7 +253,7 @@ func shellQuote(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", "'\\''") + "'"
 }
 
-// stableGreeterCommand returns the dms-greeter invocation persisted into
+// stableGreeterCommand returns the advs-greeter invocation persisted into
 // greetd config, preferring this binary's own system install location.
 func stableGreeterCommand() string {
 	if exe, err := os.Executable(); err == nil {
@@ -264,13 +264,13 @@ func stableGreeterCommand() string {
 			return exe
 		}
 	}
-	for _, candidate := range []string{"/usr/bin/dms-greeter", "/usr/local/bin/dms-greeter"} {
+	for _, candidate := range []string{"/usr/bin/advs-greeter", "/usr/local/bin/advs-greeter"} {
 		info, err := os.Stat(candidate)
 		if err == nil && !info.IsDir() && info.Mode()&0o111 != 0 {
 			return candidate
 		}
 	}
-	return "dms-greeter"
+	return "advs-greeter"
 }
 
 func isSystemBinaryPath(path string) bool {
@@ -444,7 +444,7 @@ func execFromDesktopFile(path string) (string, error) {
 func resolveGreeterAutoLoginState(cacheDir, homeDir string) (enabled bool, loginUser string, sessionID string, err error) {
 	settingsPath := filepath.Join(cacheDir, "settings.json")
 	if _, statErr := os.Stat(settingsPath); statErr != nil {
-		settingsPath = filepath.Join(homeDir, ".config", "DankMaterialShell", "settings.json")
+		settingsPath = filepath.Join(homeDir, ".config", "AriadnevShell", "settings.json")
 	}
 
 	cfg, err := readGreeterAutoLoginConfig(settingsPath)
@@ -689,11 +689,11 @@ func DetectGreeterUser() string {
 	return "greeter"
 }
 
-// ResolveGreeterBinaryPath returns the dms-greeter path used in the greetd
+// ResolveGreeterBinaryPath returns the advs-greeter path used in the greetd
 // default_session command. This is now the binary itself (the historical bash
 // wrapper is gone); a legacy wrapper script is never selected.
 func ResolveGreeterBinaryPath() string {
-	if override := strings.TrimSpace(os.Getenv("DMS_GREETER_WRAPPER_CMD")); override != "" {
+	if override := strings.TrimSpace(os.Getenv("ADVS_GREETER_WRAPPER_CMD")); override != "" {
 		return override
 	}
 
@@ -706,26 +706,26 @@ func ResolveGreeterBinaryPath() string {
 		}
 	}
 
-	for _, candidate := range []string{"/usr/bin/dms-greeter", "/usr/local/bin/dms-greeter"} {
+	for _, candidate := range []string{"/usr/bin/advs-greeter", "/usr/local/bin/advs-greeter"} {
 		info, err := os.Stat(candidate)
 		if err == nil && !info.IsDir() && (info.Mode()&0o111) != 0 && !isShellScript(candidate) {
 			return candidate
 		}
 	}
 
-	if path, err := exec.LookPath("dms-greeter"); err == nil {
+	if path, err := exec.LookPath("advs-greeter"); err == nil {
 		resolved := path
 		if realPath, realErr := filepath.EvalSymlinks(path); realErr == nil {
 			resolved = realPath
 		}
 		if !isSystemBinaryPath(resolved) {
-			fmt.Fprintf(os.Stderr, "⚠ Warning: ignoring non-system dms-greeter on PATH: %s\n", path)
+			fmt.Fprintf(os.Stderr, "⚠ Warning: ignoring non-system advs-greeter on PATH: %s\n", path)
 		} else {
 			return path
 		}
 	}
 
-	return "/usr/bin/dms-greeter"
+	return "/usr/bin/advs-greeter"
 }
 
 func isShellScript(path string) bool {
@@ -740,10 +740,10 @@ func isShellScript(path string) bool {
 }
 
 // LegacyWrapperScriptPaths returns install locations still occupied by the
-// historical dms-greeter bash wrapper.
+// historical advs-greeter bash wrapper.
 func LegacyWrapperScriptPaths() []string {
 	var paths []string
-	for _, candidate := range []string{"/usr/bin/dms-greeter", "/usr/local/bin/dms-greeter"} {
+	for _, candidate := range []string{"/usr/bin/advs-greeter", "/usr/local/bin/advs-greeter"} {
 		info, err := os.Stat(candidate)
 		if err != nil || info.IsDir() {
 			continue
@@ -758,7 +758,7 @@ func LegacyWrapperScriptPaths() []string {
 // HasLegacyQuickshellTree reports whether the old packaged QML tree from the
 // wrapper-based install is still present.
 func HasLegacyQuickshellTree() bool {
-	info, err := os.Stat("/usr/share/quickshell/dms-greeter")
+	info, err := os.Stat("/usr/share/quickshell/advs-greeter")
 	return err == nil && info.IsDir()
 }
 
@@ -837,7 +837,7 @@ func EnsureGreetdInstalled(logFunc func(string), sudoPassword string) error {
 	return nil
 }
 
-// EnsureGreeterCacheDir creates /var/cache/dms-greeter with correct ownership if it does not exist.
+// EnsureGreeterCacheDir creates /var/cache/advs-greeter with correct ownership if it does not exist.
 // It is safe to call multiple times (idempotent) and will repair ownership/mode
 // when the directory already exists with stale permissions.
 func EnsureGreeterCacheDir(logFunc func(string), sudoPassword string) error {
@@ -1015,7 +1015,7 @@ func InstallAppArmorProfile(logFunc func(string), sudoPassword string) error {
 		return fmt.Errorf("failed to create /etc/apparmor.d: %w", err)
 	}
 
-	tmp, err := os.CreateTemp("", "dms-apparmor-*")
+	tmp, err := os.CreateTemp("", "advs-apparmor-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file for AppArmor profile: %w", err)
 	}
@@ -1050,7 +1050,7 @@ func InstallAppArmorProfile(logFunc func(string), sudoPassword string) error {
 	return nil
 }
 
-// UninstallAppArmorProfile removes the DMS AppArmor profile and reloads AppArmor.
+// UninstallAppArmorProfile removes the ADVS AppArmor profile and reloads AppArmor.
 // It is a no-op when AppArmor is not active or the profile does not exist.
 func UninstallAppArmorProfile(logFunc func(string), sudoPassword string) error {
 	if IsNixOS() {
@@ -1069,7 +1069,7 @@ func UninstallAppArmorProfile(logFunc func(string), sudoPassword string) error {
 	if err := privesc.Run(context.Background(), sudoPassword, "rm", "-f", appArmorProfileDest); err != nil {
 		return fmt.Errorf("failed to remove AppArmor profile: %w", err)
 	}
-	logFunc("  ✓ Removed DMS AppArmor profile")
+	logFunc("  ✓ Removed ADVS AppArmor profile")
 	return nil
 }
 
@@ -1192,9 +1192,9 @@ func RemediateStaleACLs(logFunc func(string), sudoPassword string) {
 	dirs := []string{
 		homeDir,
 		filepath.Join(homeDir, ".config"),
-		filepath.Join(homeDir, ".config", "DankMaterialShell"),
+		filepath.Join(homeDir, ".config", "AriadnevShell"),
 		filepath.Join(homeDir, ".cache"),
-		filepath.Join(homeDir, ".cache", "DankMaterialShell"),
+		filepath.Join(homeDir, ".cache", "AriadnevShell"),
 		filepath.Join(homeDir, ".local"),
 		filepath.Join(homeDir, ".local", "state"),
 		filepath.Join(homeDir, ".local", "share"),
@@ -1240,7 +1240,7 @@ func RemediateStaleAppArmor(logFunc func(string), sudoPassword string) {
 	_ = UninstallAppArmorProfile(logFunc, sudoPassword)
 }
 
-func SetupDMSGroup(logFunc func(string), sudoPassword string) error {
+func SetupADVSGroup(logFunc func(string), sudoPassword string) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("failed to get user home directory: %w", err)
@@ -1297,9 +1297,9 @@ func SetupDMSGroup(logFunc func(string), sudoPassword string) error {
 		path string
 		desc string
 	}{
-		{filepath.Join(homeDir, ".config", "DankMaterialShell"), "DankMaterialShell config"},
-		{filepath.Join(homeDir, ".local", "state", "DankMaterialShell"), "DankMaterialShell state"},
-		{filepath.Join(homeDir, ".cache", "DankMaterialShell"), "DankMaterialShell cache"},
+		{filepath.Join(homeDir, ".config", "AriadnevShell"), "AriadnevShell config"},
+		{filepath.Join(homeDir, ".local", "state", "AriadnevShell"), "AriadnevShell state"},
+		{filepath.Join(homeDir, ".cache", "AriadnevShell"), "AriadnevShell cache"},
 		{filepath.Join(homeDir, ".cache", "quickshell"), "quickshell cache"},
 		{filepath.Join(homeDir, ".config", "quickshell"), "quickshell config"},
 		{filepath.Join(homeDir, ".local", "share", "wayland-sessions"), "wayland sessions"},
@@ -1362,15 +1362,15 @@ type greeterThemeSyncState struct {
 }
 
 func defaultGreeterColorsSource(homeDir string) string {
-	return filepath.Join(homeDir, ".cache", "DankMaterialShell", "dms-colors.json")
+	return filepath.Join(homeDir, ".cache", "AriadnevShell", "advs-colors.json")
 }
 
 func greeterOverrideColorsStateDir(homeDir string) string {
-	return filepath.Join(homeDir, ".cache", "DankMaterialShell", "greeter-colors")
+	return filepath.Join(homeDir, ".cache", "AriadnevShell", "greeter-colors")
 }
 
 func greeterOverrideColorsSource(homeDir string) string {
-	return filepath.Join(greeterOverrideColorsStateDir(homeDir), "dms-colors.json")
+	return filepath.Join(greeterOverrideColorsStateDir(homeDir), "advs-colors.json")
 }
 
 func readOptionalJSONFile(path string, dst any) error {
@@ -1393,7 +1393,7 @@ func readGreeterThemeSyncSettings(homeDir string) (greeterThemeSyncSettings, err
 		MatugenScheme:    "scheme-tonal-spot",
 		IconTheme:        "System Default",
 	}
-	settingsPath := filepath.Join(homeDir, ".config", "DankMaterialShell", "settings.json")
+	settingsPath := filepath.Join(homeDir, ".config", "AriadnevShell", "settings.json")
 	if err := readOptionalJSONFile(settingsPath, &settings); err != nil {
 		return greeterThemeSyncSettings{}, fmt.Errorf("failed to parse settings at %s: %w", settingsPath, err)
 	}
@@ -1402,7 +1402,7 @@ func readGreeterThemeSyncSettings(homeDir string) (greeterThemeSyncSettings, err
 
 func readGreeterThemeSyncSession(homeDir string) (greeterThemeSyncSession, error) {
 	session := greeterThemeSyncSession{}
-	sessionPath := filepath.Join(homeDir, ".local", "state", "DankMaterialShell", "session.json")
+	sessionPath := filepath.Join(homeDir, ".local", "state", "AriadnevShell", "session.json")
 	if err := readOptionalJSONFile(sessionPath, &session); err != nil {
 		return greeterThemeSyncSession{}, fmt.Errorf("failed to parse session at %s: %w", sessionPath, err)
 	}
@@ -1538,7 +1538,7 @@ func syncGreeterColorSource(homeDir, cacheDir string, state greeterThemeSyncStat
 	return nil
 }
 
-func SyncDMSConfigs(compositor string, logFunc func(string), sudoPassword string) error {
+func SyncADVSConfigs(compositor string, logFunc func(string), sudoPassword string) error {
 	if err := EnsureVoidLogindGreetdCommand(logFunc, sudoPassword); err != nil {
 		return err
 	}
@@ -1556,12 +1556,12 @@ func SyncDMSConfigs(compositor string, logFunc func(string), sudoPassword string
 		desc   string
 	}{
 		{
-			source: filepath.Join(homeDir, ".config", "DankMaterialShell", "settings.json"),
+			source: filepath.Join(homeDir, ".config", "AriadnevShell", "settings.json"),
 			target: filepath.Join(cacheDir, "settings.json"),
 			desc:   "core settings (theme, clock formats, etc)",
 		},
 		{
-			source: filepath.Join(homeDir, ".local", "state", "DankMaterialShell", "session.json"),
+			source: filepath.Join(homeDir, ".local", "state", "AriadnevShell", "session.json"),
 			target: filepath.Join(cacheDir, "session.json"),
 			desc:   "state (wallpaper configuration)",
 		},
@@ -1732,30 +1732,30 @@ func syncNiriGreeterConfig(logFunc func(string), sudoPassword string) error {
 		return fmt.Errorf("failed to set greetd niri directory permissions: %w", err)
 	}
 
-	dmsTemp, err := os.CreateTemp("", "dms-greeter-niri-dms-*.kdl")
+	advsTemp, err := os.CreateTemp("", "advs-greeter-niri-advs-*.kdl")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer os.Remove(dmsTemp.Name())
+	defer os.Remove(advsTemp.Name())
 
-	if _, err := dmsTemp.WriteString(content); err != nil {
-		_ = dmsTemp.Close()
+	if _, err := advsTemp.WriteString(content); err != nil {
+		_ = advsTemp.Close()
 		return fmt.Errorf("failed to write temp niri config: %w", err)
 	}
-	if err := dmsTemp.Close(); err != nil {
+	if err := advsTemp.Close(); err != nil {
 		return fmt.Errorf("failed to close temp niri config: %w", err)
 	}
 
-	dmsPath := filepath.Join(greeterDir, "dms.kdl")
-	if err := backupFileIfExists(sudoPassword, dmsPath, ".backup"); err != nil {
-		return fmt.Errorf("failed to backup %s: %w", dmsPath, err)
+	advsPath := filepath.Join(greeterDir, "advs.kdl")
+	if err := backupFileIfExists(sudoPassword, advsPath, ".backup"); err != nil {
+		return fmt.Errorf("failed to backup %s: %w", advsPath, err)
 	}
-	if err := privesc.Run(context.Background(), sudoPassword, "install", "-o", "root", "-g", greeterGroup, "-m", "0644", dmsTemp.Name(), dmsPath); err != nil {
-		return fmt.Errorf("failed to install greetd niri dms config: %w", err)
+	if err := privesc.Run(context.Background(), sudoPassword, "install", "-o", "root", "-g", greeterGroup, "-m", "0644", advsTemp.Name(), advsPath); err != nil {
+		return fmt.Errorf("failed to install greetd niri advs config: %w", err)
 	}
 
-	mainContent := fmt.Sprintf("%s\ninclude \"%s\"\n", config.NiriGreeterConfig, dmsPath)
-	mainTemp, err := os.CreateTemp("", "dms-greeter-niri-main-*.kdl")
+	mainContent := fmt.Sprintf("%s\ninclude \"%s\"\n", config.NiriGreeterConfig, advsPath)
+	mainTemp, err := os.CreateTemp("", "advs-greeter-niri-main-*.kdl")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
@@ -1781,7 +1781,7 @@ func syncNiriGreeterConfig(logFunc func(string), sudoPassword string) error {
 		logFunc(fmt.Sprintf("⚠ Warning: Failed to update greetd config for niri: %v", err))
 	}
 
-	logFunc(fmt.Sprintf("✓ Synced niri greeter config (%d input, %d output, %d cursor, %d debug) to %s", extractor.inputCount, extractor.outputCount, extractor.cursorCount, extractor.debugCount, dmsPath))
+	logFunc(fmt.Sprintf("✓ Synced niri greeter config (%d input, %d output, %d cursor, %d debug) to %s", extractor.inputCount, extractor.outputCount, extractor.cursorCount, extractor.debugCount, advsPath))
 	return nil
 }
 
@@ -1810,7 +1810,7 @@ func ensureGreetdNiriConfig(logFunc func(string), sudoPassword string, niriConfi
 		}
 
 		command := strings.Trim(strings.TrimSpace(parts[1]), "\"")
-		if !strings.Contains(command, "dms-greeter") {
+		if !strings.Contains(command, "advs-greeter") {
 			continue
 		}
 		if !strings.Contains(command, "--command niri") {
@@ -2036,7 +2036,7 @@ func (s *niriGreeterSync) render() string {
 	return builder.String()
 }
 
-// ConfigureGreetd writes the packaged dms-greeter into greetd config. When
+// ConfigureGreetd writes the packaged advs-greeter into greetd config. When
 // shellDir is empty, the UI embedded in the binary is used.
 func ConfigureGreetd(shellDir, compositor string, logFunc func(string), sudoPassword string) error {
 	return ConfigureGreetdWithBinary(ResolveGreeterBinaryPath(), shellDir, compositor, logFunc, sudoPassword)
@@ -2095,7 +2095,7 @@ func defaultLocalGreeterInstallDeps() localGreeterInstallDeps {
 }
 
 // InstallLocalGreeterBinary stages a checkout build at a system executable
-// path without replacing the package-owned /usr/bin/dms-greeter.
+// path without replacing the package-owned /usr/bin/advs-greeter.
 func InstallLocalGreeterBinary(sourcePath string, logFunc func(string), sudoPassword string) (string, error) {
 	return installLocalGreeterBinary(sourcePath, logFunc, sudoPassword, defaultLocalGreeterInstallDeps())
 }
@@ -2122,12 +2122,12 @@ func buildGreetdCommand(greeterCmd, compositor, shellDir string, useVoidLogind b
 		commandValue = fmt.Sprintf("%s -c %s", commandValue, shellDir)
 	}
 	if useVoidLogind {
-		commandValue = "env LIBSEAT_BACKEND=logind DMS_VOID=1 " + commandValue
+		commandValue = "env LIBSEAT_BACKEND=logind ADVS_VOID=1 " + commandValue
 	}
 	return commandValue
 }
 
-// EnsureVoidLogindGreetdCommand migrates DMS greeter commands on Void.
+// EnsureVoidLogindGreetdCommand migrates ADVS greeter commands on Void.
 func EnsureVoidLogindGreetdCommand(logFunc func(string), sudoPassword string) error {
 	if !IsVoidLinux() {
 		return nil
@@ -2144,7 +2144,7 @@ func EnsureVoidLogindGreetdCommand(logFunc func(string), sudoPassword string) er
 
 	configContent := string(data)
 	command := extractDefaultSessionCommand(configContent)
-	if command == "" || !strings.Contains(command, "dms-greeter") {
+	if command == "" || !strings.Contains(command, "advs-greeter") {
 		return nil
 	}
 
@@ -2188,10 +2188,10 @@ func extractDefaultSessionCommand(configContent string) string {
 }
 
 func voidLogindGreeterCommand(command string) string {
-	if strings.Contains(command, "LIBSEAT_BACKEND=logind") && strings.Contains(command, "DMS_VOID=1") {
+	if strings.Contains(command, "LIBSEAT_BACKEND=logind") && strings.Contains(command, "ADVS_VOID=1") {
 		return command
 	}
-	return "env LIBSEAT_BACKEND=logind DMS_VOID=1 " + command
+	return "env LIBSEAT_BACKEND=logind ADVS_VOID=1 " + command
 }
 
 func stripConfigFlag(command string) string {

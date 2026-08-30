@@ -1,0 +1,89 @@
+# AppArmor profile for advs-greeter
+#
+# Managed by ADVS — regenerated on every `advs-greeter install` / `advs-greeter sync`.
+# Manual edits will be overwritten on next sync.
+#
+# Mode: complain  (denials are logged, nothing is blocked)
+# To switch to enforce after validating with `aa-logprof`:
+#   sudo aa-enforce /etc/apparmor.d/usr.bin.advs-greeter
+#
+#include <tunables/global>
+
+profile advs-greeter /{usr,usr/local}/bin/advs-greeter{,-local} flags=(complain) {
+  #include <abstractions/base>
+
+  # The greeter binary itself
+  /{usr,usr/local}/bin/advs-greeter{,-local} rm,
+  @{PROC}/self/exe r,
+
+  # Cache directory — created by advs-greeter sync/enable with greeter:greeter
+  # ownership; includes the embedded UI extracted to .cache/advs-greeter-shell
+  /var/cache/advs-greeter/     rw,
+  /var/cache/advs-greeter/**   rwlk,
+
+  # Temporary per-compositor configs generated at launch
+  /tmp/                     r,
+  owner /tmp/advs-greeter-*  rw,
+
+  # Custom UI config dirs (-c/--shell-dir, legacy -p installs)
+  /usr/share/quickshell/               r,
+  /usr/share/quickshell/**             r,
+  /etc/advs/    r,
+  /etc/advs/**  r,
+  /usr/share/advs/    r,
+  /usr/share/advs/**  r,
+  /home/*/.config/quickshell/    r,
+  /home/*/.config/quickshell/**  r,
+  /root/.config/quickshell/     r,
+  /root/.config/quickshell/**   r,
+
+  # greetd / PAM — read-only for session setup (incl. niri override includes)
+  /etc/greetd/    r,
+  /etc/greetd/**  r,
+  /etc/pam.d/     r,
+  /etc/pam.d/**   r,
+  /usr/lib/pam.d/ r,
+  /usr/lib/pam.d/** r,
+
+  # Compositor binaries — run unconfined so each compositor uses its own profile
+  /usr/bin/niri        Ux,
+  /usr/bin/hyprland    Ux,
+  /usr/bin/Hyprland    Ux,
+  /usr/bin/start-hyprland Ux,
+  /usr/bin/sway        Ux,
+  /usr/bin/labwc       Ux,
+  /usr/bin/scroll      Ux,
+  /usr/bin/miracle-wm  Ux,
+  /usr/bin/mango       Ux,
+
+  # Quickshell — run unconfined (has its own compositor profile on some distros)
+  /usr/bin/qs          Ux,
+  /usr/bin/quickshell  Ux,
+
+  # Compositor output is piped to journald via systemd-cat
+  /usr/bin/systemd-cat ix,
+
+  # VT clearing before compositor start
+  /dev/tty     rw,
+
+  # Wayland / XDG runtime (pipewire, wireplumber, wayland socket)
+  /run/user/[0-9]*/               rw,
+  /run/user/[0-9]*/**             rw,
+
+  # DRM / GPU devices (required for Wayland compositor startup)
+  /dev/dri/      r,
+  /dev/dri/*     rw,
+  /dev/udmabuf   rw,
+
+  # Input devices
+  /dev/input/    r,
+  /dev/input/*   r,
+
+  # Systemd journal / logging
+  /run/systemd/journal/socket  rw,
+  /run/systemd/journal/stdout  rw,
+  /dev/log                     rw,
+
+  # Signal management (compositor lifecycle)
+  signal (send, receive) set=("term", "int", "hup", "kill"),
+}

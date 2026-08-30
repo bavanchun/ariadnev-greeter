@@ -1,8 +1,8 @@
-# Root Makefile for DMS Greeter
+# Root Makefile for ADVS Greeter
 # Orchestrates the Go core build and local installation of the
 # binary (with the quickshell UI embedded) and its system assets.
 
-BINARY_NAME=dms-greeter
+BINARY_NAME=advs-greeter
 CORE_DIR=core
 BUILD_DIR=$(CORE_DIR)/bin
 PREFIX ?= /usr/local
@@ -38,11 +38,11 @@ fmt:
 vet:
 	@$(MAKE) -C $(CORE_DIR) vet
 
-# Pull the latest dank-qml-common and pin it everywhere it is consumed
+# Pull the latest ariadnev-qml-common and pin it everywhere it is consumed
 # (submodule pointer + nix flake input). Commit both in one change.
 update-common:
-	git submodule update --remote --merge dank-qml-common
-	nix --extra-experimental-features 'nix-command flakes' flake update dank-qml-common
+	git submodule update --remote --merge ariadnev-qml-common
+	nix --extra-experimental-features 'nix-command flakes' flake update ariadnev-qml-common
 
 i18n-extract:
 	@python3 $(SHELL_DIR)/translations/extract_translations.py
@@ -70,7 +70,7 @@ install-bin:
 install: install-bin
 	@echo ""
 	@echo "Installation complete."
-	@echo "Configure greetd with 'dms-greeter install', then sync your theme with 'dms-greeter sync'."
+	@echo "Configure greetd with 'advs-greeter install', then sync your theme with 'advs-greeter sync'."
 
 uninstall-bin:
 	@rm -f $(DESTDIR)$(INSTALL_DIR)/$(BINARY_NAME)
@@ -80,11 +80,11 @@ uninstall: uninstall-bin
 
 help:
 	@echo "Build:"
-	@echo "  build              - Build the dms-greeter binary (release flags, UI embedded)"
+	@echo "  build              - Build the advs-greeter binary (release flags, UI embedded)"
 	@echo "  dev                - Fast development build"
 	@echo "  run                - Build and preview the greeter against the in-repo quickshell config"
 	@echo "  clean / test / fmt / vet"
-	@echo "  update-common      - Bump the dank-qml-common submodule + flake input"
+	@echo "  update-common      - Bump the ariadnev-qml-common submodule + flake input"
 	@echo "  i18n-extract       - Regenerate translations/en.json from I18n.tr() calls"
 	@echo "  i18n-local         - Re-extract and show added/removed terms (no POEditor)"
 	@echo "  i18n-test          - Extract and validate, no POEditor calls"

@@ -13,14 +13,14 @@ TEMPLATE_JSON = REPO_ROOT / "translations" / "template.json"
 POEXPORTS_DIR = REPO_ROOT / "translations" / "poexports"
 SYNC_STATE = REPO_ROOT.parent / ".git" / "i18n_sync_state.json"
 
-# dms-greeter terms live in the shared DMS POEditor project under this tag.
+# advs-greeter terms live in the shared ADVS POEditor project under this tag.
 # Everything here is tag-scoped: uploads only add terms (never sync_terms or
-# overwrite, so DMS-owned terms and translations are untouched), tagging
+# overwrite, so ADVS-owned terms and translations are untouched), tagging
 # merges with existing tags, prune only removes this tag from stale terms
-# (never deletes — the term may still be owned by DMS), and downloads export
-# only the tag. dank-qml-common translations ship inside the submodule and
+# (never deletes — the term may still be owned by ADVS), and downloads export
+# only the tag. ariadnev-qml-common translations ship inside the submodule and
 # are not synced from this repo.
-APP_TAG = "dms-greeter"
+APP_TAG = "advs-greeter"
 
 LANGUAGES = {
     "ja": "ja.json",
@@ -203,7 +203,7 @@ def prune_remote_terms(api_token, project_id, local_entries, remote_terms):
     stale = [t for t in remote_terms
              if APP_TAG in t.get('tags', []) and entry_key(t) not in local_keys]
     if not stale:
-        info("No stale dms-greeter terms to prune")
+        info("No stale advs-greeter terms to prune")
         return
 
     warn(f"Removing {APP_TAG} tag from {len(stale)} terms no longer used locally")

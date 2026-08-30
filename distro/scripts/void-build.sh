@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# Stage and (optionally) build Void XBPS packages for dms-greeter / dms-greeter-git.
+# Stage and (optionally) build Void XBPS packages for advs-greeter / advs-greeter-git.
 #
 # Usage:
-#   ./distro/scripts/void-build.sh dms-greeter-git --smoke
-#   ./distro/scripts/void-build.sh dms-greeter --smoke
+#   ./distro/scripts/void-build.sh advs-greeter-git --smoke
+#   ./distro/scripts/void-build.sh advs-greeter --smoke
 #       Pack source layout + run make sync-shell (no void-packages needed)
-#   ./distro/scripts/void-build.sh dms-greeter-git --void-packages=~/void-packages
+#   ./distro/scripts/void-build.sh advs-greeter-git --void-packages=~/void-packages
 #       Full xbps-src pkg (same packing as CI)
-#   ./distro/scripts/void-build.sh dms-greeter --version=1.5.2 --void-packages=...
+#   ./distro/scripts/void-build.sh advs-greeter --version=1.5.2 --void-packages=...
 #
 # CI sets VOID_PACKAGES_DIR to the checked-out void-packages tree and
 # REPOSITORY_DIR to the R2 working copy (optional copy-out of .xbps).
 
 set -euo pipefail
 
-REPO="AvengeMedia/dank-greeter"
-PACKAGE="dms-greeter-git"
+REPO="bavanchun/ariadnev-greeter"
+PACKAGE="advs-greeter-git"
 VERSION=""
 SMOKE=false
 FORCE_REBUILD=false
@@ -27,7 +27,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 for arg in "$@"; do
     case "$arg" in
-    dms-greeter|dms-greeter-git)
+    advs-greeter|advs-greeter-git)
         PACKAGE="$arg"
         ;;
     --smoke)
@@ -61,8 +61,8 @@ done
 
 cd "$REPO_ROOT"
 
-if [[ ! -e "$REPO_ROOT/dank-qml-common/DankCommon/Widgets/DankIcon.qml" ]]; then
-    echo "ERROR: dank-qml-common submodule missing. Run: git submodule update --init" >&2
+if [[ ! -e "$REPO_ROOT/ariadnev-qml-common/AdvCommon/Widgets/AdvIcon.qml" ]]; then
+    echo "ERROR: ariadnev-qml-common submodule missing. Run: git submodule update --init" >&2
     exit 1
 fi
 
@@ -81,15 +81,15 @@ stage_checkout_tree() {
     local dest="$1"
     mkdir -p "$dest"
     git archive --format=tar HEAD | tar -x -C "$dest"
-    rm -rf "$dest/dank-qml-common"
-    mkdir -p "$dest/dank-qml-common"
-    tar -C "$REPO_ROOT/dank-qml-common" --exclude='.git' -cf - . \
-        | tar -C "$dest/dank-qml-common" -xf -
-    rm -rf "$dest/quickshell/DankCommon"
-    ln -sfn ../dank-qml-common/DankCommon "$dest/quickshell/DankCommon"
+    rm -rf "$dest/ariadnev-qml-common"
+    mkdir -p "$dest/ariadnev-qml-common"
+    tar -C "$REPO_ROOT/ariadnev-qml-common" --exclude='.git' -cf - . \
+        | tar -C "$dest/ariadnev-qml-common" -xf -
+    rm -rf "$dest/quickshell/AdvCommon"
+    ln -sfn ../ariadnev-qml-common/AdvCommon "$dest/quickshell/AdvCommon"
 }
 
-# Flat tarball for create_wrksrc=yes + build_wrksrc=core (dms-git pattern).
+# Flat tarball for create_wrksrc=yes + build_wrksrc=core (advs-git pattern).
 pack_git_source() {
     local dest_tarball="$1"
     local tmp
@@ -117,24 +117,24 @@ pack_git_source() {
     fi
 }
 
-# Nested tarball dank-greeter-$ver/... (stable Void template, no create_wrksrc).
+# Nested tarball ariadnev-greeter-$ver/... (stable Void template, no create_wrksrc).
 pack_stable_source() {
     local dest_tarball="$1"
     local ver="$2"
     local tmp top
     tmp="$(mktemp -d)"
     trap 'rm -rf "'"$tmp"'"' EXIT
-    top="$tmp/dank-greeter-${ver}"
+    top="$tmp/ariadnev-greeter-${ver}"
     mkdir -p "$top"
     stage_checkout_tree "$top"
 
     mkdir -p "$(dirname "$dest_tarball")"
-    tar -C "$tmp" -czf "$dest_tarball" "dank-greeter-${ver}"
+    tar -C "$tmp" -czf "$dest_tarball" "ariadnev-greeter-${ver}"
     rm -rf "$tmp"
     trap - EXIT
 
-    if [[ "$(tar -tzf "$dest_tarball" | grep -c "dank-greeter-${ver}/core/" || true)" -lt 1 ]]; then
-        echo "ERROR: stable tarball missing dank-greeter-${ver}/core/" >&2
+    if [[ "$(tar -tzf "$dest_tarball" | grep -c "ariadnev-greeter-${ver}/core/" || true)" -lt 1 ]]; then
+        echo "ERROR: stable tarball missing ariadnev-greeter-${ver}/core/" >&2
         tar -tzf "$dest_tarball" | head -20 >&2 || true
         exit 1
     fi
@@ -159,13 +159,13 @@ run_sync_shell_smoke() {
     local core_dir="$1"
     require_tar_on_path
     make -C "$core_dir" sync-shell
-    test -f "$core_dir/internal/shellembed/dist/DankCommon/Widgets/DankIcon.qml"
+    test -f "$core_dir/internal/shellembed/dist/AdvCommon/Widgets/AdvIcon.qml"
 }
 
 smoke_git() {
     local ver tarball extract
     ver="$(git_version)"
-    tarball="$(mktemp /tmp/dms-greeter-git-XXXXXX.tar.gz)"
+    tarball="$(mktemp /tmp/advs-greeter-git-XXXXXX.tar.gz)"
     extract="$(mktemp -d)"
     trap 'rm -rf "'"$extract"'"; rm -f "'"$tarball"'"' EXIT
 
@@ -181,7 +181,7 @@ smoke_git() {
     fi
     run_sync_shell_smoke "$extract/core"
 
-    echo "==> Smoke OK: dms-greeter-git flat pack + sync-shell"
+    echo "==> Smoke OK: advs-greeter-git flat pack + sync-shell"
     rm -rf "$extract"
     rm -f "$tarball"
     trap - EXIT
@@ -194,23 +194,23 @@ smoke_stable() {
         ver="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || true)"
         [[ -z "$ver" ]] && ver="1.0.0"
     fi
-    tarball="$(mktemp /tmp/dms-greeter-XXXXXX.tar.gz)"
+    tarball="$(mktemp /tmp/advs-greeter-XXXXXX.tar.gz)"
     extract="$(mktemp -d)"
     trap 'rm -rf "'"$extract"'"; rm -f "'"$tarball"'"' EXIT
 
     check_template_has_tar
-    echo "==> Smoke: packing nested stable source (dank-greeter-${ver}/)"
+    echo "==> Smoke: packing nested stable source (ariadnev-greeter-${ver}/)"
     pack_stable_source "$tarball" "$ver"
 
     echo "==> Smoke: extract + make sync-shell"
     tar -xzf "$tarball" -C "$extract"
-    if [[ ! -d "$extract/dank-greeter-${ver}/core" ]]; then
-        echo "ERROR: extract missing dank-greeter-${ver}/core/" >&2
+    if [[ ! -d "$extract/ariadnev-greeter-${ver}/core" ]]; then
+        echo "ERROR: extract missing ariadnev-greeter-${ver}/core/" >&2
         exit 1
     fi
-    run_sync_shell_smoke "$extract/dank-greeter-${ver}/core"
+    run_sync_shell_smoke "$extract/ariadnev-greeter-${ver}/core"
 
-    echo "==> Smoke OK: dms-greeter nested pack + sync-shell"
+    echo "==> Smoke OK: advs-greeter nested pack + sync-shell"
     rm -rf "$extract"
     rm -f "$tarball"
     trap - EXIT
@@ -219,33 +219,33 @@ smoke_stable() {
 patch_git_template() {
     local void_pkgs="$1" ver="$2" tarball="$3" checksum
     checksum="$(sha256sum "$tarball" | cut -d' ' -f1)"
-    sed -i "s/^version=.*/version=${ver}/" "$void_pkgs/srcpkgs/dms-greeter-git/template"
-    sed -i "s/^checksum=.*/checksum=${checksum}/" "$void_pkgs/srcpkgs/dms-greeter-git/template"
-    sed -i "s|^distfiles=.*|distfiles=\"dms-greeter-git-${ver}.tar.gz\"|" \
-        "$void_pkgs/srcpkgs/dms-greeter-git/template"
+    sed -i "s/^version=.*/version=${ver}/" "$void_pkgs/srcpkgs/advs-greeter-git/template"
+    sed -i "s/^checksum=.*/checksum=${checksum}/" "$void_pkgs/srcpkgs/advs-greeter-git/template"
+    sed -i "s|^distfiles=.*|distfiles=\"advs-greeter-git-${ver}.tar.gz\"|" \
+        "$void_pkgs/srcpkgs/advs-greeter-git/template"
 }
 
 build_git_xbps() {
     local void_pkgs="$1"
     local ver tarball rev expected
     ver="$(git_version)"
-    echo "==> Preparing dms-greeter-git version $ver"
+    echo "==> Preparing advs-greeter-git version $ver"
 
-    tarball="$void_pkgs/hostdir/sources/dms-greeter-git-${ver}/dms-greeter-git-${ver}.tar.gz"
+    tarball="$void_pkgs/hostdir/sources/advs-greeter-git-${ver}/advs-greeter-git-${ver}.tar.gz"
     mkdir -p "$(dirname "$tarball")"
     pack_git_source "$tarball"
     patch_git_template "$void_pkgs" "$ver" "$tarball"
 
-    rev="$(grep -E '^revision=' "$void_pkgs/srcpkgs/dms-greeter-git/template" | cut -d= -f2 | tr -d '"')"
-    expected="dms-greeter-git-${ver}_${rev}.x86_64.xbps"
+    rev="$(grep -E '^revision=' "$void_pkgs/srcpkgs/advs-greeter-git/template" | cut -d= -f2 | tr -d '"')"
+    expected="advs-greeter-git-${ver}_${rev}.x86_64.xbps"
 
     if [[ -n "$REPOSITORY_DIR" ]] && [[ -f "$REPOSITORY_DIR/current/$expected" ]] && [[ "$FORCE_REBUILD" != true ]]; then
         echo "✅ $expected already exists, skipping build."
         return 0
     fi
 
-    echo "🔨 Compiling dms-greeter-git via xbps-src..."
-    (cd "$void_pkgs" && ./xbps-src pkg dms-greeter-git)
+    echo "🔨 Compiling advs-greeter-git via xbps-src..."
+    (cd "$void_pkgs" && ./xbps-src pkg advs-greeter-git)
 
     if [[ -n "$REPOSITORY_DIR" ]]; then
         mkdir -p "$REPOSITORY_DIR/current"
@@ -266,27 +266,27 @@ build_stable_xbps() {
         exit 1
     fi
 
-    echo "==> Preparing dms-greeter version $ver"
+    echo "==> Preparing advs-greeter version $ver"
     local tarball checksum rev expected
     tarball="$(mktemp)"
     curl -fsSL -o "$tarball" \
-        "https://github.com/${REPO}/releases/download/v${ver}/dank-greeter-${ver}.tar.gz"
+        "https://github.com/${REPO}/releases/download/v${ver}/ariadnev-greeter-${ver}.tar.gz"
     checksum="$(sha256sum "$tarball" | cut -d' ' -f1)"
     rm -f "$tarball"
 
-    sed -i "s/^version=.*/version=${ver}/" "$void_pkgs/srcpkgs/dms-greeter/template"
-    sed -i "s/^checksum=.*/checksum=${checksum}/" "$void_pkgs/srcpkgs/dms-greeter/template"
+    sed -i "s/^version=.*/version=${ver}/" "$void_pkgs/srcpkgs/advs-greeter/template"
+    sed -i "s/^checksum=.*/checksum=${checksum}/" "$void_pkgs/srcpkgs/advs-greeter/template"
 
-    rev="$(grep -E '^revision=' "$void_pkgs/srcpkgs/dms-greeter/template" | cut -d= -f2 | tr -d '"')"
-    expected="dms-greeter-${ver}_${rev}.x86_64.xbps"
+    rev="$(grep -E '^revision=' "$void_pkgs/srcpkgs/advs-greeter/template" | cut -d= -f2 | tr -d '"')"
+    expected="advs-greeter-${ver}_${rev}.x86_64.xbps"
 
     if [[ -n "$REPOSITORY_DIR" ]] && [[ -f "$REPOSITORY_DIR/current/$expected" ]] && [[ "$FORCE_REBUILD" != true ]]; then
         echo "✅ $expected already exists, skipping build."
         return 0
     fi
 
-    echo "🔨 Compiling dms-greeter via xbps-src..."
-    (cd "$void_pkgs" && ./xbps-src pkg dms-greeter)
+    echo "🔨 Compiling advs-greeter via xbps-src..."
+    (cd "$void_pkgs" && ./xbps-src pkg advs-greeter)
 
     if [[ -n "$REPOSITORY_DIR" ]]; then
         mkdir -p "$REPOSITORY_DIR/current"
@@ -297,7 +297,7 @@ build_stable_xbps() {
 }
 
 if [[ "$SMOKE" == true ]]; then
-    if [[ "$PACKAGE" == "dms-greeter-git" ]]; then
+    if [[ "$PACKAGE" == "advs-greeter-git" ]]; then
         smoke_git
     else
         smoke_stable
@@ -320,7 +320,7 @@ if [[ ! -f "$VOID_PACKAGES_DIR/srcpkgs/${PACKAGE}/template" ]]; then
     cp -R "$REPO_ROOT/distro/void/srcpkgs/${PACKAGE}" "$VOID_PACKAGES_DIR/srcpkgs/"
 fi
 
-if [[ "$PACKAGE" == "dms-greeter-git" ]]; then
+if [[ "$PACKAGE" == "advs-greeter-git" ]]; then
     build_git_xbps "$VOID_PACKAGES_DIR"
 else
     build_stable_xbps "$VOID_PACKAGES_DIR"

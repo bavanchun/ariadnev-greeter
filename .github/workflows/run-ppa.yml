@@ -8,10 +8,10 @@ on:
         required: true
         type: choice
         options:
-          - dms-greeter
-          - dms-greeter-git
+          - advs-greeter
+          - advs-greeter-git
           - both
-        default: "dms-greeter"
+        default: "advs-greeter"
       series:
         description: "Ubuntu series to upload"
         required: true
@@ -35,7 +35,7 @@ on:
 jobs:
   determine-matrix:
     runs-on: ubuntu-latest
-    if: github.repository == 'AvengeMedia/dank-greeter'
+    if: github.repository == 'bavanchun/ariadnev-greeter'
     outputs:
       series: ${{ steps.set.outputs.series }}
       packages: ${{ steps.set.outputs.packages }}
@@ -47,7 +47,7 @@ jobs:
           if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
             # schedule → git snapshot only, all series
             echo 'series=["resolute","stonking"]' >> "$GITHUB_OUTPUT"
-            echo 'packages=["dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+            echo 'packages=["advs-greeter-git"]' >> "$GITHUB_OUTPUT"
             echo "series_mode=all" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -66,9 +66,9 @@ jobs:
           echo "series_mode=${{ github.event.inputs.series }}" >> "$GITHUB_OUTPUT"
           case "${{ github.event.inputs.package }}" in
             both)
-              echo 'packages=["dms-greeter","dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+              echo 'packages=["advs-greeter","advs-greeter-git"]' >> "$GITHUB_OUTPUT"
               ;;
-            dms-greeter|dms-greeter-git)
+            advs-greeter|advs-greeter-git)
               echo 'packages=["${{ github.event.inputs.package }}"]' >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -81,7 +81,7 @@ jobs:
     name: Upload ${{ matrix.package }} (${{ matrix.series }})
     needs: determine-matrix
     runs-on: ubuntu-latest
-    if: github.repository == 'AvengeMedia/dank-greeter'
+    if: github.repository == 'bavanchun/ariadnev-greeter'
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -136,7 +136,7 @@ jobs:
           fi
 
           ARGS=("$PACKAGE" "${{ matrix.series }}" "$PPA_NUM")
-          if [[ "$PACKAGE" == "dms-greeter" && -n "${{ github.event.inputs.version }}" ]]; then
+          if [[ "$PACKAGE" == "advs-greeter" && -n "${{ github.event.inputs.version }}" ]]; then
             ARGS+=("--version=${{ github.event.inputs.version }}")
           fi
           bash distro/scripts/ppa-upload.sh "${ARGS[@]}"
@@ -148,4 +148,4 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Package:** ${{ matrix.package }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Series:** ${{ matrix.series }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **PPA:** https://launchpad.net/~avengemedia/+archive/ubuntu/danklinux/+packages" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **PPA:** https://launchpad.net/~avengemedia/+archive/ubuntu/ariadnev/+packages" >> "$GITHUB_STEP_SUMMARY"

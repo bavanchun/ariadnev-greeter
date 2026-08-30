@@ -1,7 +1,7 @@
-// Package shellembed carries the quickshell UI inside the dms-greeter binary
+// Package shellembed carries the quickshell UI inside the advs-greeter binary
 // and materializes it at runtime via dankgo/shellapp/shellfs, since quickshell
 // needs a real filesystem path. Customization goes through -c /
-// DMS_GREETER_SHELL_DIR instead of editing the extraction.
+// ADVS_GREETER_SHELL_DIR instead of editing the extraction.
 package shellembed
 
 import (

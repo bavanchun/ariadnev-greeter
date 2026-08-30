@@ -1,0 +1,2 @@
+# ppa-upload.sh packs advs-greeter-git-source/ (checkout + submodule + vendor)
+# into the native source package before debuild. Uses distro golang-go on Launchpad.

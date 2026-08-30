@@ -103,7 +103,7 @@ bin/
 .direnv/
 __pycache__
 
-core/dms-greeter
+core/advs-greeter
 
 # Populated from quickshell/ by `make sync-shell` for embedded builds
 core/internal/shellembed/dist/

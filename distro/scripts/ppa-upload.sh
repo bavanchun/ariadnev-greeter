@@ -1,16 +1,16 @@
 #!/bin/bash
-# Build and upload dms-greeter / dms-greeter-git to the danklinux PPA.
+# Build and upload advs-greeter / advs-greeter-git to the ariadnev PPA.
 # Native format: each Ubuntu series needs a distinct version, so the second
 # series gets ppa suffix +1 when both are uploaded in one run.
 #
 # Usage:
-#   ./distro/scripts/ppa-upload.sh [dms-greeter|dms-greeter-git] [series] [ppa_num] [--version=X.Y.Z] [--keep-builds]
+#   ./distro/scripts/ppa-upload.sh [advs-greeter|advs-greeter-git] [series] [ppa_num] [--version=X.Y.Z] [--keep-builds]
 #
 # Examples:
 #   ./distro/scripts/ppa-upload.sh                         # stable, both series
-#   ./distro/scripts/ppa-upload.sh dms-greeter-git         # git, both series
-#   ./distro/scripts/ppa-upload.sh dms-greeter resolute    # stable, one series
-#   ./distro/scripts/ppa-upload.sh dms-greeter-git resolute 2
+#   ./distro/scripts/ppa-upload.sh advs-greeter-git         # git, both series
+#   ./distro/scripts/ppa-upload.sh advs-greeter resolute    # stable, one series
+#   ./distro/scripts/ppa-upload.sh advs-greeter-git resolute 2
 #
 # CI uploads via dput/SFTP (LAUNCHPAD_SSH_PRIVATE_KEY); local via anonymous lftp.
 
@@ -27,12 +27,12 @@ success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-REPO="AvengeMedia/dank-greeter"
-PACKAGE="dms-greeter"
+REPO="bavanchun/ariadnev-greeter"
+PACKAGE="advs-greeter"
 PPA_OWNER="avengemedia"
-PPA_NAME="danklinux"
+PPA_NAME="ariadnev"
 DEB_EPOCH=1
-MAINTAINER="Avenge Media <AvengeMedia.US@gmail.com>"
+MAINTAINER="Avenge Media <bavanchun.US@gmail.com>"
 LAUNCHPAD_API="https://api.launchpad.net/1.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,12 +49,12 @@ for arg in "$@"; do
             VERSION="${arg#*=}"
             VERSION="${VERSION#v}"
             ;;
-        dms-greeter|dms-greeter-git) PACKAGE="$arg" ;;
+        advs-greeter|advs-greeter-git) PACKAGE="$arg" ;;
         resolute|stonking) SERIES="$arg" ;;
         [0-9]*) PPA_NUM="$arg" ;;
         *)
             error "Unknown argument: $arg"
-            echo "Usage: $0 [dms-greeter|dms-greeter-git] [resolute|stonking] [ppa_num] [--version=X.Y.Z]"
+            echo "Usage: $0 [advs-greeter|advs-greeter-git] [resolute|stonking] [ppa_num] [--version=X.Y.Z]"
             exit 1
             ;;
     esac
@@ -165,20 +165,20 @@ ${PACKAGE} (${NEW_VERSION}) ${SERIES}; urgency=medium
  -- ${MAINTAINER}  $(date -R)
 EOF
 
-    info "Packing git source tree into dms-greeter-git-source/"
-    if [[ ! -e "$REPO_ROOT/dank-qml-common/DankCommon/Widgets/DankIcon.qml" ]]; then
-        error "dank-qml-common submodule missing. Run: git submodule update --init"
+    info "Packing git source tree into advs-greeter-git-source/"
+    if [[ ! -e "$REPO_ROOT/ariadnev-qml-common/AdvCommon/Widgets/AdvIcon.qml" ]]; then
+        error "ariadnev-qml-common submodule missing. Run: git submodule update --init"
         exit 1
     fi
-    SRC_DIR="$WORK_PACKAGE_DIR/dms-greeter-git-source"
+    SRC_DIR="$WORK_PACKAGE_DIR/advs-greeter-git-source"
     mkdir -p "$SRC_DIR"
     git -C "$REPO_ROOT" archive --format=tar HEAD | tar -x -C "$SRC_DIR"
-    rm -rf "$SRC_DIR/dank-qml-common"
-    mkdir -p "$SRC_DIR/dank-qml-common"
-    tar -C "$REPO_ROOT/dank-qml-common" --exclude='.git' -cf - . \
-        | tar -C "$SRC_DIR/dank-qml-common" -xf -
-    rm -rf "$SRC_DIR/quickshell/DankCommon"
-    ln -sfn ../dank-qml-common/DankCommon "$SRC_DIR/quickshell/DankCommon"
+    rm -rf "$SRC_DIR/ariadnev-qml-common"
+    mkdir -p "$SRC_DIR/ariadnev-qml-common"
+    tar -C "$REPO_ROOT/ariadnev-qml-common" --exclude='.git' -cf - . \
+        | tar -C "$SRC_DIR/ariadnev-qml-common" -xf -
+    rm -rf "$SRC_DIR/quickshell/AdvCommon"
+    ln -sfn ../ariadnev-qml-common/AdvCommon "$SRC_DIR/quickshell/AdvCommon"
     if [[ ! -d "$SRC_DIR/core/vendor" ]]; then
         info "Vendoring Go dependencies for Launchpad offline build..."
         if ! command -v go &>/dev/null; then
@@ -196,9 +196,9 @@ ${PACKAGE} (${NEW_VERSION}) ${SERIES}; urgency=medium
  -- ${MAINTAINER}  $(date -R)
 EOF
 
-    TARBALL_URL="https://github.com/${REPO}/releases/download/v${VERSION}/dank-greeter-${VERSION}.tar.gz"
+    TARBALL_URL="https://github.com/${REPO}/releases/download/v${VERSION}/ariadnev-greeter-${VERSION}.tar.gz"
     info "Downloading release source: $TARBALL_URL"
-    if ! { wget -q -O dms-greeter-source.tar.gz "$TARBALL_URL" 2>/dev/null || curl -L -f -s -o dms-greeter-source.tar.gz "$TARBALL_URL"; }; then
+    if ! { wget -q -O advs-greeter-source.tar.gz "$TARBALL_URL" 2>/dev/null || curl -L -f -s -o advs-greeter-source.tar.gz "$TARBALL_URL"; }; then
         error "Failed to download $TARBALL_URL"
         exit 1
     fi

@@ -16,9 +16,9 @@ Singleton {
         Fatal
     }
 
-    readonly property int level: _parseLevel(Quickshell.env("DMS_LOG_LEVEL"))
+    readonly property int level: _parseLevel(Quickshell.env("ADVS_LOG_LEVEL"))
 
-    readonly property string _logFilePath: Quickshell.env("DMS_LOG_FILE") || ""
+    readonly property string _logFilePath: Quickshell.env("ADVS_LOG_FILE") || ""
 
     function scoped(module) {
         return {

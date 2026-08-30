@@ -1,6 +1,6 @@
-// Package pam manages the DMS-managed auth block in /etc/pam.d/greetd
+// Package pam manages the ADVS-managed auth block in /etc/pam.d/greetd
 // (fingerprint / U2F lines for the greeter). Marker strings are kept
-// byte-identical to DankMaterialShell so blocks written by older DMS
+// byte-identical to AriadnevShell so blocks written by older ADVS
 // versions are recognized.
 package pam
 
@@ -14,16 +14,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AvengeMedia/dank-greeter/core/internal/distros"
-	"github.com/AvengeMedia/dank-greeter/core/internal/privesc"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/distros"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/privesc"
 )
 
 const (
-	GreeterPamManagedBlockStart = "# BEGIN DMS GREETER AUTH (managed by dms greeter sync)"
-	GreeterPamManagedBlockEnd   = "# END DMS GREETER AUTH"
+	GreeterPamManagedBlockStart = "# BEGIN ADVS GREETER AUTH (managed by advs greeter sync)"
+	GreeterPamManagedBlockEnd   = "# END ADVS GREETER AUTH"
 
-	legacyGreeterPamFprintComment = "# DMS greeter fingerprint"
-	legacyGreeterPamU2FComment    = "# DMS greeter U2F"
+	legacyGreeterPamFprintComment = "# ADVS greeter fingerprint"
+	legacyGreeterPamU2FComment    = "# ADVS greeter U2F"
 
 	GreetdPamPath = "/etc/pam.d/greetd"
 )
@@ -84,10 +84,10 @@ func IsNixOS() bool {
 	return err == nil
 }
 
-// ReadAuthSettings reads the greeter auth toggles from the user's DMS
-// settings; DMS Settings remains the front-end for these values.
+// ReadAuthSettings reads the greeter auth toggles from the user's ADVS
+// settings; ADVS Settings remains the front-end for these values.
 func ReadAuthSettings(homeDir string) (AuthSettings, error) {
-	settingsPath := filepath.Join(homeDir, ".config", "DankMaterialShell", "settings.json")
+	settingsPath := filepath.Join(homeDir, ".config", "AriadnevShell", "settings.json")
 	data, err := os.ReadFile(settingsPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -149,7 +149,7 @@ func syncAuthConfigWithDeps(logFunc func(string), sudoPassword string, options S
 		if err := removeManagedGreeterPamBlockWithDeps(logFunc, sudoPassword, deps); err != nil {
 			return err
 		}
-		logFunc("ℹ /etc/pam.d/greetd is externally managed. Skipping DMS greeter PAM sync.")
+		logFunc("ℹ /etc/pam.d/greetd is externally managed. Skipping ADVS greeter PAM sync.")
 		return nil
 	}
 
@@ -180,7 +180,7 @@ func removeManagedGreeterPamBlockWithDeps(logFunc func(string), sudoPassword str
 		return fmt.Errorf("failed to write %s: %w", deps.greetdPath, err)
 	}
 
-	logFunc("✓ Removed DMS managed PAM block from " + deps.greetdPath)
+	logFunc("✓ Removed ADVS managed PAM block from " + deps.greetdPath)
 	return nil
 }
 
@@ -370,7 +370,7 @@ func syncGreeterPamConfigWithDeps(logFunc func(string), sudoPassword string, set
 	}
 
 	if deps.isNixOS() {
-		logFunc("ℹ NixOS detected: PAM config is managed by NixOS modules. Skipping DMS PAM block write.")
+		logFunc("ℹ NixOS detected: PAM config is managed by NixOS modules. Skipping ADVS PAM block write.")
 		logFunc("  Configure fingerprint/U2F auth via your greetd NixOS module options (e.g. security.pam.services.greetd).")
 		return nil
 	}
@@ -387,23 +387,23 @@ func syncGreeterPamConfigWithDeps(logFunc func(string), sudoPassword string, set
 	includedU2fFile := detectIncludedPamModule(content, "pam_u2f.so", deps)
 	fprintAvailableForCurrentUser := deps.fingerprintAvailableForCurrentUser()
 	if wantFprint && includedFprintFile != "" {
-		logFunc("⚠ pam_fprintd already present in included " + includedFprintFile + " (managed by authselect/pam-auth-update). Skipping DMS fprint block to avoid double-fingerprint auth.")
+		logFunc("⚠ pam_fprintd already present in included " + includedFprintFile + " (managed by authselect/pam-auth-update). Skipping ADVS fprint block to avoid double-fingerprint auth.")
 		wantFprint = false
 	}
 	if wantU2f && includedU2fFile != "" {
-		logFunc("⚠ pam_u2f already present in included " + includedU2fFile + " (managed by authselect/pam-auth-update). Skipping DMS U2F block to avoid double security-key auth.")
+		logFunc("⚠ pam_u2f already present in included " + includedU2fFile + " (managed by authselect/pam-auth-update). Skipping ADVS U2F block to avoid double security-key auth.")
 		wantU2f = false
 	}
 	if !wantFprint && includedFprintFile != "" {
 		switch {
 		case fprintToggleEnabled && fprintAvailableForCurrentUser:
 			logFunc("ℹ Fingerprint auth is still enabled via included " + includedFprintFile + ".")
-			logFunc("  DMS toggle is enabled, and effective auth is provided by the included PAM stack.")
+			logFunc("  ADVS toggle is enabled, and effective auth is provided by the included PAM stack.")
 		case fprintToggleEnabled:
 			logFunc("ℹ Fingerprint auth is still enabled via included " + includedFprintFile + ".")
 			logFunc("  No enrolled fingerprints detected for the current user; password auth remains the effective path.")
 		case fprintAvailableForCurrentUser:
-			logFunc("ℹ Fingerprint auth is active via included " + includedFprintFile + " while DMS fingerprint toggle is off.")
+			logFunc("ℹ Fingerprint auth is active via included " + includedFprintFile + " while ADVS fingerprint toggle is off.")
 			logFunc("  Password login will work but may be delayed while the fingerprint module runs first.")
 			logFunc("  To eliminate the delay, " + pamManagerHintForCurrentDistro())
 		default:
@@ -414,9 +414,9 @@ func syncGreeterPamConfigWithDeps(logFunc func(string), sudoPassword string, set
 	if !wantU2f && includedU2fFile != "" {
 		if u2fToggleEnabled {
 			logFunc("ℹ Security-key auth is still enabled via included " + includedU2fFile + ".")
-			logFunc("  DMS toggle is enabled, but effective auth is provided by the included PAM stack.")
+			logFunc("  ADVS toggle is enabled, but effective auth is provided by the included PAM stack.")
 		} else {
-			logFunc("⚠ Security-key auth is active via included " + includedU2fFile + " while DMS security-key toggle is off.")
+			logFunc("⚠ Security-key auth is active via included " + includedU2fFile + " while ADVS security-key toggle is off.")
 			logFunc("  " + pamManagerHintForCurrentDistro())
 		}
 	}
@@ -447,13 +447,13 @@ func syncGreeterPamConfigWithDeps(logFunc func(string), sudoPassword string, set
 	if wantFprint || wantU2f {
 		logFunc("✓ Configured greetd PAM for fingerprint/U2F")
 	} else {
-		logFunc("✓ Cleared DMS-managed greeter PAM auth block")
+		logFunc("✓ Cleared ADVS-managed greeter PAM auth block")
 	}
 	return nil
 }
 
 func writeManagedPamFile(content string, destPath string, sudoPassword string, deps syncDeps) error {
-	tmpFile, err := deps.createTemp("", "dms-pam-*.conf")
+	tmpFile, err := deps.createTemp("", "advs-pam-*.conf")
 	if err != nil {
 		return err
 	}

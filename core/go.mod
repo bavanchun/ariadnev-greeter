@@ -1,4 +1,4 @@
-module github.com/AvengeMedia/dank-greeter/core
+module github.com/bavanchun/ariadnev-greeter/core
 
 go 1.26.4
 

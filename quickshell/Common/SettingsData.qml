@@ -32,7 +32,7 @@ Singleton {
         VeryHigh
     }
 
-    readonly property string _greeterCacheDir: Quickshell.env("DMS_GREET_CFG_DIR") || "/var/cache/dms-greeter"
+    readonly property string _greeterCacheDir: Quickshell.env("ADVS_GREET_CFG_DIR") || "/var/cache/advs-greeter"
 
     property int animationSpeed: SettingsData.AnimationSpeed.Short
     property int customAnimationDuration: 500

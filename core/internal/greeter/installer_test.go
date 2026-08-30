@@ -56,9 +56,9 @@ func TestEnsureGreeterCacheSELinuxContext(t *testing.T) {
 			t.Fatalf("ensureGreeterCacheSELinuxContext returned error: %v", err)
 		}
 		want := []string{
-			"semanage fcontext -m -t cache_home_t /var/cache/dms-greeter(/.*)?",
-			"semanage fcontext -a -t cache_home_t /var/cache/dms-greeter(/.*)?",
-			"restorecon -R /var/cache/dms-greeter",
+			"semanage fcontext -m -t cache_home_t /var/cache/advs-greeter(/.*)?",
+			"semanage fcontext -a -t cache_home_t /var/cache/advs-greeter(/.*)?",
+			"restorecon -R /var/cache/advs-greeter",
 		}
 		if strings.Join(commands, "\n") != strings.Join(want, "\n") {
 			t.Fatalf("commands:\n%s\nwant:\n%s", strings.Join(commands, "\n"), strings.Join(want, "\n"))
@@ -126,7 +126,7 @@ func TestInstallLocalGreeterBinary(t *testing.T) {
 			},
 		}
 
-		got, err := installLocalGreeterBinary("/checkout/core/bin/dms-greeter-local", func(string) {}, "", deps)
+		got, err := installLocalGreeterBinary("/checkout/core/bin/advs-greeter-local", func(string) {}, "", deps)
 		if err != nil {
 			t.Fatalf("installLocalGreeterBinary returned error: %v", err)
 		}
@@ -134,8 +134,8 @@ func TestInstallLocalGreeterBinary(t *testing.T) {
 			t.Fatalf("installed path = %q, want %q", got, LocalGreeterBinaryPath)
 		}
 		want := []string{
-			"install -D -m 0755 /checkout/core/bin/dms-greeter-local /usr/local/bin/dms-greeter-local",
-			"restorecon -v /usr/local/bin/dms-greeter-local",
+			"install -D -m 0755 /checkout/core/bin/advs-greeter-local /usr/local/bin/advs-greeter-local",
+			"restorecon -v /usr/local/bin/advs-greeter-local",
 		}
 		if !reflect.DeepEqual(commands, want) {
 			t.Fatalf("commands = %v, want %v", commands, want)
@@ -193,7 +193,7 @@ func TestResolveGreeterThemeSyncState(t *testing.T) {
   "iconTheme": "Papirus"
 }`,
 			sessionJSON:             `{"isLightMode":true}`,
-			wantSourcePath:          filepath.Join(".cache", "DankMaterialShell", "greeter-colors", "dms-colors.json"),
+			wantSourcePath:          filepath.Join(".cache", "AriadnevShell", "greeter-colors", "advs-colors.json"),
 			wantResolvedWallpaper:   filepath.Join("Pictures", "blue.jpg"),
 			wantDynamicOverrideUsed: true,
 		},
@@ -204,7 +204,7 @@ func TestResolveGreeterThemeSyncState(t *testing.T) {
   "greeterWallpaperPath": ""
 }`,
 			sessionJSON:             `{"isLightMode":false}`,
-			wantSourcePath:          filepath.Join(".cache", "DankMaterialShell", "dms-colors.json"),
+			wantSourcePath:          filepath.Join(".cache", "AriadnevShell", "advs-colors.json"),
 			wantResolvedWallpaper:   "",
 			wantDynamicOverrideUsed: false,
 		},
@@ -215,7 +215,7 @@ func TestResolveGreeterThemeSyncState(t *testing.T) {
   "greeterWallpaperPath": "/tmp/blue.jpg"
 }`,
 			sessionJSON:             `{"isLightMode":false}`,
-			wantSourcePath:          filepath.Join(".cache", "DankMaterialShell", "dms-colors.json"),
+			wantSourcePath:          filepath.Join(".cache", "AriadnevShell", "advs-colors.json"),
 			wantResolvedWallpaper:   "/tmp/blue.jpg",
 			wantDynamicOverrideUsed: false,
 		},
@@ -226,8 +226,8 @@ func TestResolveGreeterThemeSyncState(t *testing.T) {
 			t.Parallel()
 
 			homeDir := t.TempDir()
-			writeTestFile(t, filepath.Join(homeDir, ".config", "DankMaterialShell", "settings.json"), tt.settingsJSON)
-			writeTestFile(t, filepath.Join(homeDir, ".local", "state", "DankMaterialShell", "session.json"), tt.sessionJSON)
+			writeTestFile(t, filepath.Join(homeDir, ".config", "AriadnevShell", "settings.json"), tt.settingsJSON)
+			writeTestFile(t, filepath.Join(homeDir, ".local", "state", "AriadnevShell", "session.json"), tt.sessionJSON)
 
 			state, err := resolveGreeterThemeSyncState(homeDir)
 			if err != nil {
@@ -261,12 +261,12 @@ vt = 1
 
 [default_session]
 user = "greeter"
-command = "/usr/bin/dms-greeter --command niri"
+command = "/usr/bin/advs-greeter --command niri"
 `
 
 	t.Run("inserts initial session", func(t *testing.T) {
 		t.Parallel()
-		got := upsertInitialSession(baseConfig, "alice", "/var/cache/dms-greeter", true)
+		got := upsertInitialSession(baseConfig, "alice", "/var/cache/advs-greeter", true)
 		if !strings.Contains(got, "[initial_session]") {
 			t.Fatalf("expected [initial_session] section, got:\n%s", got)
 		}
@@ -276,8 +276,8 @@ command = "/usr/bin/dms-greeter --command niri"
 		if !strings.Contains(got, `launch-session --from-memory --cache-dir`) {
 			t.Fatalf("expected stable launch-session command, got:\n%s", got)
 		}
-		if !strings.Contains(got, "dms-greeter") {
-			t.Fatalf("expected dms-greeter launcher in initial session, got:\n%s", got)
+		if !strings.Contains(got, "advs-greeter") {
+			t.Fatalf("expected advs-greeter launcher in initial session, got:\n%s", got)
 		}
 		if strings.Contains(got, `exec niri`) {
 			t.Fatalf("initial session must not bake the desktop Exec command, got:\n%s", got)
@@ -291,7 +291,7 @@ command = "/usr/bin/dms-greeter --command niri"
 user = "bob"
 command = "old-command"
 `
-		got := upsertInitialSession(existing, "alice", "/var/cache/dms-greeter", true)
+		got := upsertInitialSession(existing, "alice", "/var/cache/advs-greeter", true)
 		if strings.Contains(got, `user = "bob"`) {
 			t.Fatalf("expected bob to be replaced, got:\n%s", got)
 		}
@@ -330,17 +330,17 @@ func TestBuildGreetdCommand(t *testing.T) {
 	}{
 		{
 			name:       "standard command",
-			greeterCmd: "/usr/bin/dms-greeter",
+			greeterCmd: "/usr/bin/advs-greeter",
 			compositor: "Niri",
-			want:       "/usr/bin/dms-greeter --command niri --cache-dir /var/cache/dms-greeter",
+			want:       "/usr/bin/advs-greeter --command niri --cache-dir /var/cache/advs-greeter",
 		},
 		{
 			name:          "void selects elogind and keeps custom shell dir",
-			greeterCmd:    "/usr/bin/dms-greeter",
+			greeterCmd:    "/usr/bin/advs-greeter",
 			compositor:    "Niri",
-			shellDir:      "/home/dev/dank-greeter/quickshell",
+			shellDir:      "/home/dev/ariadnev-greeter/quickshell",
 			useVoidLogind: true,
-			want:          "env LIBSEAT_BACKEND=logind DMS_VOID=1 /usr/bin/dms-greeter --command niri --cache-dir /var/cache/dms-greeter -c /home/dev/dank-greeter/quickshell",
+			want:          "env LIBSEAT_BACKEND=logind ADVS_VOID=1 /usr/bin/advs-greeter --command niri --cache-dir /var/cache/advs-greeter -c /home/dev/ariadnev-greeter/quickshell",
 		},
 	}
 
@@ -357,8 +357,8 @@ func TestBuildGreetdCommand(t *testing.T) {
 func TestVoidLogindGreeterCommand(t *testing.T) {
 	t.Parallel()
 
-	const oldCommand = "/usr/bin/dms-greeter --command niri -C /etc/greetd/niri.kdl"
-	const want = "env LIBSEAT_BACKEND=logind DMS_VOID=1 " + oldCommand
+	const oldCommand = "/usr/bin/advs-greeter --command niri -C /etc/greetd/niri.kdl"
+	const want = "env LIBSEAT_BACKEND=logind ADVS_VOID=1 " + oldCommand
 	if got := voidLogindGreeterCommand(oldCommand); got != want {
 		t.Fatalf("voidLogindGreeterCommand() = %q, want %q", got, want)
 	}
@@ -506,14 +506,14 @@ func TestNiriGreeterSyncMergesDebugNodesAcrossIncludes(t *testing.T) {
     honor-xdg-activation-with-invalid-serial
 }
 
-include "dms/debug.kdl"
-include "dms/render.kdl"
+include "advs/debug.kdl"
+include "advs/render.kdl"
 `)
-	writeTestFile(t, filepath.Join(configDir, "dms", "debug.kdl"), `debug {
+	writeTestFile(t, filepath.Join(configDir, "advs", "debug.kdl"), `debug {
     honor-xdg-activation-with-invalid-serial
 }
 `)
-	writeTestFile(t, filepath.Join(configDir, "dms", "render.kdl"), `debug {
+	writeTestFile(t, filepath.Join(configDir, "advs", "render.kdl"), `debug {
     render-drm-device "/dev/dri/renderD128"
 }
 `)

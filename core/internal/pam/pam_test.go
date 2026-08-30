@@ -57,7 +57,7 @@ func (e *pamTestEnv) writePamFile(t *testing.T, name string, content string) {
 
 func (e *pamTestEnv) writeSettings(t *testing.T, content string) {
 	t.Helper()
-	writeTestFile(t, filepath.Join(e.homeDir, ".config", "DankMaterialShell", "settings.json"), content)
+	writeTestFile(t, filepath.Join(e.homeDir, ".config", "AriadnevShell", "settings.json"), content)
 }
 
 func (e *pamTestEnv) deps(isNixOS bool) syncDeps {
@@ -196,10 +196,10 @@ func TestRemoveManagedGreeterPamBlockWithDeps(t *testing.T) {
 
 	got := readFileString(t, env.greetdPath)
 	if strings.Contains(got, GreeterPamManagedBlockStart) || strings.Contains(got, legacyGreeterPamFprintComment) {
-		t.Fatalf("managed or legacy DMS auth lines remained in greetd PAM:\n%s", got)
+		t.Fatalf("managed or legacy ADVS auth lines remained in greetd PAM:\n%s", got)
 	}
 	if !strings.Contains(got, "auth include system-auth") {
-		t.Fatalf("expected non-DMS greetd auth lines to remain:\n%s", got)
+		t.Fatalf("expected non-ADVS greetd auth lines to remain:\n%s", got)
 	}
 }
 
@@ -279,10 +279,10 @@ func TestSyncAuthConfigWithDeps(t *testing.T) {
 
 		greetd := readFileString(t, env.greetdPath)
 		if strings.Contains(greetd, GreeterPamManagedBlockStart) || strings.Contains(greetd, "pam_fprintd") {
-			t.Fatalf("expected DMS-managed block stripped from externally managed greetd:\n%s", greetd)
+			t.Fatalf("expected ADVS-managed block stripped from externally managed greetd:\n%s", greetd)
 		}
 		if !strings.Contains(greetd, "auth include system-auth") {
-			t.Fatalf("expected non-DMS greetd lines to remain:\n%s", greetd)
+			t.Fatalf("expected non-ADVS greetd lines to remain:\n%s", greetd)
 		}
 		if !containsSubstr(logs, "externally managed") {
 			t.Fatalf("expected externally-managed skip log, got %v", logs)

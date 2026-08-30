@@ -1,16 +1,16 @@
 {
-  description = "DMS Greeter";
+  description = "ADVS Greeter";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    dank-qml-common = {
-      url = "github:AvengeMedia/dank-qml-common";
+    ariadnev-qml-common = {
+      url = "github:bavanchun/ariadnev-qml-common";
       flake = false;
     };
   };
 
   outputs =
-    { self, nixpkgs, dank-qml-common, ... }:
+    { self, nixpkgs, ariadnev-qml-common, ... }:
     let
       goModVersion =
         let
@@ -47,7 +47,7 @@
           ];
         };
 
-      mkDmsGreeter =
+      mkAdvsGreeter =
         pkgs:
         (
           let
@@ -55,25 +55,25 @@
           in
           (pkgs.buildGoModule.override { go = goForPkgs pkgs; }) {
             inherit version;
-            pname = "dms-greeter";
+            pname = "advs-greeter";
             src = ./.;
             modRoot = "core";
             vendorHash = "sha256-Ort6y6BTKfuMRjDpTjY5tnCE5VAS4CItwo1U5dAvHpw=";
 
-            subPackages = [ "cmd/dms-greeter" ];
+            subPackages = [ "cmd/advs-greeter" ];
 
             tags = [ "withshell" ];
 
             # Mirror `make -C core sync-shell`: bake the quickshell UI into
             # the binary, minus dev-only files. The flake src excludes
-            # submodule content, so the DankCommon symlink is replaced with
-            # the pinned dank-qml-common input.
+            # submodule content, so the AdvCommon symlink is replaced with
+            # the pinned ariadnev-qml-common input.
             postPatch = ''
               rm -rf core/internal/shellembed/dist
               cp -r quickshell core/internal/shellembed/dist
-              rm -f core/internal/shellembed/dist/DankCommon
-              cp -r ${dank-qml-common}/DankCommon core/internal/shellembed/dist/DankCommon
-              chmod -R u+w core/internal/shellembed/dist/DankCommon
+              rm -f core/internal/shellembed/dist/AdvCommon
+              cp -r ${ariadnev-qml-common}/AdvCommon core/internal/shellembed/dist/AdvCommon
+              chmod -R u+w core/internal/shellembed/dist/AdvCommon
               rm -rf core/internal/shellembed/dist/scripts \
                 core/internal/shellembed/dist/.claude
               rm -f core/internal/shellembed/dist/.qmlls.ini \
@@ -94,39 +94,39 @@
             ];
 
             postInstall = ''
-              installShellCompletion --cmd dms-greeter \
-                --bash <($out/bin/dms-greeter completion bash) \
-                --fish <($out/bin/dms-greeter completion fish) \
-                --zsh <($out/bin/dms-greeter completion zsh)
+              installShellCompletion --cmd advs-greeter \
+                --bash <($out/bin/advs-greeter completion bash) \
+                --fish <($out/bin/advs-greeter completion fish) \
+                --zsh <($out/bin/advs-greeter completion zsh)
             '';
 
             meta = {
-              description = "greetd login screen with the Dank Material aesthetic";
-              homepage = "https://github.com/AvengeMedia/dank-greeter";
+              description = "greetd login screen with the Adv Material aesthetic";
+              homepage = "https://github.com/bavanchun/ariadnev-greeter";
               license = pkgs.lib.licenses.mit;
-              mainProgram = "dms-greeter";
+              mainProgram = "advs-greeter";
               platforms = pkgs.lib.platforms.linux;
             };
           }
         );
 
       buildGreeterPkgs = pkgs: {
-        dms-greeter = mkDmsGreeter pkgs;
+        advs-greeter = mkAdvsGreeter pkgs;
       };
     in
     {
       packages = forEachSystem (
         system: pkgs: {
-          dms-greeter = mkDmsGreeter pkgs;
-          default = self.packages.${system}.dms-greeter;
+          advs-greeter = mkAdvsGreeter pkgs;
+          default = self.packages.${system}.advs-greeter;
         }
       );
 
-      lib = { inherit mkDmsGreeter buildGreeterPkgs; };
+      lib = { inherit mkAdvsGreeter buildGreeterPkgs; };
 
-      nixosModules.dank-greeter = mkModuleWithGreeterPkgs ./distro/nix/greeter.nix;
+      nixosModules.ariadnev-greeter = mkModuleWithGreeterPkgs ./distro/nix/greeter.nix;
 
-      nixosModules.default = self.nixosModules.dank-greeter;
+      nixosModules.default = self.nixosModules.ariadnev-greeter;
 
       devShells = forEachSystem (
         system: pkgs: {

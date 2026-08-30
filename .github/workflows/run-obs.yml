@@ -8,10 +8,10 @@ on:
         required: true
         type: choice
         options:
-          - dms-greeter
-          - dms-greeter-git
+          - advs-greeter
+          - advs-greeter-git
           - both
-        default: "dms-greeter"
+        default: "advs-greeter"
       target:
         description: "OBS target(s) to upload"
         required: true
@@ -35,7 +35,7 @@ on:
 jobs:
   determine-packages:
     runs-on: ubuntu-latest
-    if: github.repository == 'AvengeMedia/dank-greeter'
+    if: github.repository == 'bavanchun/ariadnev-greeter'
     outputs:
       packages: ${{ steps.set.outputs.packages }}
       target: ${{ steps.set.outputs.target }}
@@ -45,15 +45,15 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
             # schedule → git snapshot only, all targets
-            echo 'packages=["dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+            echo 'packages=["advs-greeter-git"]' >> "$GITHUB_OUTPUT"
             echo "target=all" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           case "${{ github.event.inputs.package }}" in
             both)
-              echo 'packages=["dms-greeter","dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+              echo 'packages=["advs-greeter","advs-greeter-git"]' >> "$GITHUB_OUTPUT"
               ;;
-            dms-greeter|dms-greeter-git)
+            advs-greeter|advs-greeter-git)
               echo 'packages=["${{ github.event.inputs.package }}"]' >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -67,7 +67,7 @@ jobs:
     name: Upload ${{ matrix.package }} (${{ needs.determine-packages.outputs.target }})
     needs: determine-packages
     runs-on: ubuntu-latest
-    if: github.repository == 'AvengeMedia/dank-greeter'
+    if: github.repository == 'bavanchun/ariadnev-greeter'
     strategy:
       fail-fast: false
       matrix:
@@ -98,10 +98,10 @@ jobs:
       - name: Cache OBS bundled Go toolchains
         uses: actions/cache@v4
         with:
-          path: /home/runner/.cache/dms-greeter-obs-go-toolchain
-          key: dms-greeter-obs-go-toolchain-${{ runner.os }}-${{ hashFiles('core/go.mod') }}
+          path: /home/runner/.cache/advs-greeter-obs-go-toolchain
+          key: advs-greeter-obs-go-toolchain-${{ runner.os }}-${{ hashFiles('core/go.mod') }}
           restore-keys: |
-            dms-greeter-obs-go-toolchain-${{ runner.os }}-
+            advs-greeter-obs-go-toolchain-${{ runner.os }}-
 
       - name: Upload to OBS
         env:
@@ -119,7 +119,7 @@ jobs:
               exit 1
               ;;
           esac
-          if [[ "$PACKAGE" == "dms-greeter" && -n "${{ github.event.inputs.version }}" ]]; then
+          if [[ "$PACKAGE" == "advs-greeter" && -n "${{ github.event.inputs.version }}" ]]; then
             ARGS+=("--version=${{ github.event.inputs.version }}")
           fi
           bash distro/scripts/obs-upload.sh "${ARGS[@]}"
@@ -131,7 +131,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** ${{ matrix.package }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Target:** ${{ needs.determine-packages.outputs.target }}" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ matrix.package }}" == "dms-greeter" ]]; then
+          if [[ "${{ matrix.package }}" == "advs-greeter" ]]; then
             echo "- **Version:** ${{ github.event.inputs.version || 'latest release' }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "- **Version:** git snapshot from checkout" >> $GITHUB_STEP_SUMMARY
@@ -139,4 +139,4 @@ jobs:
           if [[ -n "${{ github.event.inputs.rebuild_release }}" ]]; then
             echo "- **Rebuild:** db${{ github.event.inputs.rebuild_release }}" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "- **Builds:** https://build.opensuse.org/package/show/home:AvengeMedia:danklinux/${{ matrix.package }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Builds:** https://build.opensuse.org/package/show/home:bavanchun:ariadnev/${{ matrix.package }}" >> $GITHUB_STEP_SUMMARY

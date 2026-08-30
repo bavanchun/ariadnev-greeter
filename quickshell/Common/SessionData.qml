@@ -34,7 +34,7 @@ Singleton {
         }
     }
 
-    // DMS may key monitor wallpapers by screen name, model, or "model-N" display name
+    // ADVS may key monitor wallpapers by screen name, model, or "model-N" display name
     function _findMonitorValue(map, screenName) {
         if (!map)
             return undefined;
@@ -71,7 +71,7 @@ Singleton {
         return value !== undefined ? value : wallpaperPath;
     }
 
-    readonly property string _greeterCacheDir: Quickshell.env("DMS_GREET_CFG_DIR") || "/var/cache/dms-greeter"
+    readonly property string _greeterCacheDir: Quickshell.env("ADVS_GREET_CFG_DIR") || "/var/cache/advs-greeter"
 
     property string greeterSessionBaseDir: root._greeterCacheDir
 

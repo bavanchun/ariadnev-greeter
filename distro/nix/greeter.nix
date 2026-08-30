@@ -7,7 +7,7 @@
 }:
 let
   inherit (lib) types;
-  cfg = config.programs.dms-greeter;
+  cfg = config.programs.advs-greeter;
   cfgAutoLogin = config.services.displayManager.autoLogin;
   sessionData = config.services.displayManager.sessionData;
 
@@ -19,8 +19,8 @@ let
     in
     if configured != null then configured else builtins.getAttr cfg.compositor.name pkgs;
 
-  cacheDir = "/var/lib/dms-greeter";
-  greeterCommand = pkgs.writeShellScriptBin "dms-greeter-session" ''
+  cacheDir = "/var/lib/advs-greeter";
+  greeterCommand = pkgs.writeShellScriptBin "advs-greeter-session" ''
     export PATH=$PATH:${
       lib.makeBinPath [
         cfg.quickshell.package
@@ -31,7 +31,7 @@ let
     ${
       lib.escapeShellArgs (
         [
-          "${cfg.package}/bin/dms-greeter"
+          "${cfg.package}/bin/advs-greeter"
           "--cache-dir"
           cacheDir
           "--command"
@@ -39,7 +39,7 @@ let
         ]
         ++ lib.optionals (cfg.compositor.customConfig != "") [
           "-C"
-          "${pkgs.writeText "dms-greeter-compositor-config" cfg.compositor.customConfig}"
+          "${pkgs.writeText "advs-greeter-compositor-config" cfg.compositor.customConfig}"
         ]
         ++ lib.optionals cfg.logs.save [ "--debug" ]
       )
@@ -47,7 +47,7 @@ let
   '';
 
   autoLoginCommand =
-    pkgs.runCommand "dms-greeter-autologin-command"
+    pkgs.runCommand "advs-greeter-autologin-command"
       {
         nativeBuildInputs = [
           pkgs.gnugrep
@@ -74,20 +74,20 @@ let
           fi
         done
 
-        echo "dms-greeter autologin: could not resolve Exec for session '$session'" >&2
+        echo "advs-greeter autologin: could not resolve Exec for session '$session'" >&2
         exit 1
       '';
 
   jq = lib.getExe pkgs.jq;
 in
 {
-  options.programs.dms-greeter = {
-    enable = lib.mkEnableOption "DMS Greeter";
+  options.programs.advs-greeter = {
+    enable = lib.mkEnableOption "ADVS Greeter";
     package = lib.mkOption {
       type = types.package;
-      default = greeterPkgs.dms-greeter;
+      default = greeterPkgs.advs-greeter;
       defaultText = lib.literalExpression "built from source";
-      description = "The dms-greeter package to use.";
+      description = "The advs-greeter package to use.";
     };
     compositor.name = lib.mkOption {
       type = types.enum [
@@ -111,7 +111,7 @@ in
       default = [ ];
       description = "Config files to copy into the greeter data directory";
       example = [
-        "/home/user/.config/DankMaterialShell/settings.json"
+        "/home/user/.config/AriadnevShell/settings.json"
       ];
     };
     configHome = lib.mkOption {
@@ -119,8 +119,8 @@ in
       default = null;
       example = "/home/user";
       description = ''
-        User home directory to copy DankMaterialShell configurations from.
-        If DMS config files are in non-standard locations use configFiles instead.
+        User home directory to copy AriadnevShell configurations from.
+        If ADVS config files are in non-standard locations use configFiles instead.
       '';
     };
     quickshell = {
@@ -131,11 +131,11 @@ in
         description = "The quickshell package to use (at least 0.3.0 recommended).";
       };
     };
-    logs.save = lib.mkEnableOption "saving dms-greeter logs to a file";
+    logs.save = lib.mkEnableOption "saving advs-greeter logs to a file";
     logs.path = lib.mkOption {
       type = types.path;
-      default = "/tmp/dms-greeter.log";
-      description = "File path to save dms-greeter logs to";
+      default = "/tmp/advs-greeter.log";
+      description = "File path to save advs-greeter logs to";
     };
   };
   config = lib.mkIf cfg.enable {
@@ -143,13 +143,13 @@ in
       {
         assertion = (config.users.users.${user} or { }) != { };
         message = ''
-          dms-greeter: user set for greetd default_session ${user} does not exist. Please create it before referencing it.
+          advs-greeter: user set for greetd default_session ${user} does not exist. Please create it before referencing it.
         '';
       }
       {
         assertion = cfgAutoLogin.enable -> sessionData.autologinSession != null;
         message = ''
-          dms-greeter auto-login requires services.displayManager.defaultSession to be set,
+          advs-greeter auto-login requires services.displayManager.defaultSession to be set,
           or at least one session in services.displayManager.sessionPackages.
         '';
       }
@@ -169,7 +169,7 @@ in
       inter
       material-symbols
     ];
-    systemd.tmpfiles.settings."10-dms-greeter" = {
+    systemd.tmpfiles.settings."10-advs-greeter" = {
       ${cacheDir}.d = {
         inherit user;
         group =
@@ -225,13 +225,13 @@ in
           fi
       fi
 
-      mv dms-colors.json colors.json || :
+      mv advs-colors.json colors.json || :
       chown ${user}: * || :
     '';
-    programs.dms-greeter.configFiles = lib.mkIf (cfg.configHome != null) [
-      "${cfg.configHome}/.config/DankMaterialShell/settings.json"
-      "${cfg.configHome}/.local/state/DankMaterialShell/session.json"
-      "${cfg.configHome}/.cache/DankMaterialShell/dms-colors.json"
+    programs.advs-greeter.configFiles = lib.mkIf (cfg.configHome != null) [
+      "${cfg.configHome}/.config/AriadnevShell/settings.json"
+      "${cfg.configHome}/.local/state/AriadnevShell/session.json"
+      "${cfg.configHome}/.cache/AriadnevShell/advs-colors.json"
     ];
   };
 }

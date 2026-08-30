@@ -1,18 +1,18 @@
 {
   "nodes": {
-    "dank-qml-common": {
+    "ariadnev-qml-common": {
       "flake": false,
       "locked": {
         "lastModified": 1784433462,
         "narHash": "sha256-8MdKtu/tSYrCenhtmgYW+lcv9JhGPTE3BnSE6WuqO1U=",
-        "owner": "AvengeMedia",
-        "repo": "dank-qml-common",
+        "owner": "bavanchun",
+        "repo": "ariadnev-qml-common",
         "rev": "8d36f668d73e7a4391ea9ead3939c5de137aa1f0",
         "type": "github"
       },
       "original": {
-        "owner": "AvengeMedia",
-        "repo": "dank-qml-common",
+        "owner": "bavanchun",
+        "repo": "ariadnev-qml-common",
         "type": "github"
       }
     },
@@ -34,7 +34,7 @@
     },
     "root": {
       "inputs": {
-        "dank-qml-common": "dank-qml-common",
+        "ariadnev-qml-common": "ariadnev-qml-common",
         "nixpkgs": "nixpkgs"
       }
     }

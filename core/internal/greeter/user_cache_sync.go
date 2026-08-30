@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AvengeMedia/dank-greeter/core/internal/privesc"
-	"github.com/AvengeMedia/dank-greeter/core/internal/utils"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/privesc"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/utils"
 )
 
 var monitorWallpaperSanitizer = regexp.MustCompile(`[^a-zA-Z0-9]+`)
@@ -72,7 +72,7 @@ func CanSyncOwnUserGreeterProfile(username string) bool {
 }
 
 func GreeterProfileSyncReady() bool {
-	if command := readGreeterSessionCommand(); command != "" && strings.Contains(command, "dms-greeter") {
+	if command := readGreeterSessionCommand(); command != "" && strings.Contains(command, "advs-greeter") {
 		return true
 	}
 	usersDir := filepath.Join(GreeterCacheDir, "users")
@@ -121,7 +121,7 @@ func SyncUserProfileCache(logFunc func(string)) error {
 		logFunc = func(string) {}
 	}
 	if !GreeterProfileSyncReady() {
-		return fmt.Errorf("greeter is not set up on this system yet; an administrator must run 'dms-greeter install' or 'dms-greeter sync' once first")
+		return fmt.Errorf("greeter is not set up on this system yet; an administrator must run 'advs-greeter install' or 'advs-greeter sync' once first")
 	}
 
 	currentUser, err := user.Current()
@@ -130,7 +130,7 @@ func SyncUserProfileCache(logFunc func(string)) error {
 	}
 	if !CanSyncOwnUserGreeterProfile(currentUser.Username) {
 		group := DetectGreeterGroup()
-		return fmt.Errorf("cannot sync greeter profile: you must be in the %s group with write access to %s/users\nAsk an administrator to run:\n  sudo usermod -aG %s %s\nThen log out and back in before running:\n  dms-greeter sync --profile",
+		return fmt.Errorf("cannot sync greeter profile: you must be in the %s group with write access to %s/users\nAsk an administrator to run:\n  sudo usermod -aG %s %s\nThen log out and back in before running:\n  advs-greeter sync --profile",
 			group, GreeterCacheDir, group, currentUser.Username)
 	}
 
@@ -268,7 +268,7 @@ func syncUserGreeterCacheSlot(homeDir, cacheDir, username string, state greeterT
 	if err := syncUserSlotWallpaperOverride(cacheDir, userDir, opts); err != nil {
 		return err
 	}
-	logFunc(fmt.Sprintf("✓ Linked per-user greeter cache for %s to live DMS state", username))
+	logFunc(fmt.Sprintf("✓ Linked per-user greeter cache for %s to live ADVS state", username))
 	return nil
 }
 
@@ -280,8 +280,8 @@ type userSlotSources struct {
 
 func newUserSlotSources(homeDir string, state greeterThemeSyncState) userSlotSources {
 	return userSlotSources{
-		settings: filepath.Join(homeDir, ".config", "DankMaterialShell", "settings.json"),
-		session:  filepath.Join(homeDir, ".local", "state", "DankMaterialShell", "session.json"),
+		settings: filepath.Join(homeDir, ".config", "AriadnevShell", "settings.json"),
+		session:  filepath.Join(homeDir, ".local", "state", "AriadnevShell", "session.json"),
 		colors:   state.effectiveColorsSource(homeDir),
 	}
 }
@@ -589,7 +589,7 @@ func writeFileWithPrivesc(path string, data []byte, opts userSlotSyncOpts) error
 		return nil
 	}
 
-	tmp, err := os.CreateTemp("", "dms-greeter-user-cache-*")
+	tmp, err := os.CreateTemp("", "advs-greeter-user-cache-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file for %s: %w", path, err)
 	}

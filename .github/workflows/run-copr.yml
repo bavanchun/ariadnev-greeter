@@ -8,10 +8,10 @@ on:
         required: true
         type: choice
         options:
-          - dms-greeter
-          - dms-greeter-git
+          - advs-greeter
+          - advs-greeter-git
           - both
-        default: "dms-greeter"
+        default: "advs-greeter"
       version:
         description: "Stable version (e.g. 1.0.0). Leave empty for latest GitHub release. Ignored for git builds."
         required: false
@@ -30,10 +30,10 @@ on:
       - "quickshell/**"
       - "assets/**"
       - "Makefile"
-      - "distro/fedora/dms-greeter-git.spec"
+      - "distro/fedora/advs-greeter-git.spec"
       - "distro/scripts/copr-upload.sh"
       - ".gitmodules"
-      - "dank-qml-common"
+      - "ariadnev-qml-common"
       - ".github/workflows/run-copr.yml"
 
 concurrency:
@@ -43,7 +43,7 @@ concurrency:
 jobs:
   determine-packages:
     runs-on: ubuntu-latest
-    if: github.repository == 'AvengeMedia/dank-greeter'
+    if: github.repository == 'bavanchun/ariadnev-greeter'
     outputs:
       packages: ${{ steps.set.outputs.packages }}
     steps:
@@ -52,18 +52,18 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
             # schedule / push → git snapshot only
-            echo 'packages=["dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+            echo 'packages=["advs-greeter-git"]' >> "$GITHUB_OUTPUT"
             exit 0
           fi
           case "${{ github.event.inputs.package }}" in
-            dms-greeter)
-              echo 'packages=["dms-greeter"]' >> "$GITHUB_OUTPUT"
+            advs-greeter)
+              echo 'packages=["advs-greeter"]' >> "$GITHUB_OUTPUT"
               ;;
-            dms-greeter-git)
-              echo 'packages=["dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+            advs-greeter-git)
+              echo 'packages=["advs-greeter-git"]' >> "$GITHUB_OUTPUT"
               ;;
             both)
-              echo 'packages=["dms-greeter","dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+              echo 'packages=["advs-greeter","advs-greeter-git"]' >> "$GITHUB_OUTPUT"
               ;;
             *)
               echo "Unknown package: ${{ github.event.inputs.package }}" >&2
@@ -74,7 +74,7 @@ jobs:
   build-and-upload:
     needs: determine-packages
     runs-on: ubuntu-latest
-    if: github.repository == 'AvengeMedia/dank-greeter'
+    if: github.repository == 'bavanchun/ariadnev-greeter'
     strategy:
       fail-fast: false
       matrix:
@@ -125,10 +125,10 @@ jobs:
           echo "### ${PACKAGE} Copr Build Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Package:** \`${PACKAGE}\`" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$PACKAGE" == "dms-greeter-git" ]]; then
+          if [[ "$PACKAGE" == "advs-greeter-git" ]]; then
             echo "- **Ref:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
             echo "- **Release:** ${{ github.event.inputs.release || '1' }}" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "- **Version:** ${{ github.event.inputs.version || 'latest release' }}-${{ github.event.inputs.release || '1' }}" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "- **Project:** https://copr.fedorainfracloud.org/coprs/avengemedia/danklinux/" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Project:** https://copr.fedorainfracloud.org/coprs/avengemedia/ariadnev/" >> "$GITHUB_STEP_SUMMARY"

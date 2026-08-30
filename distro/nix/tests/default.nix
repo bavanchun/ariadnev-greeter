@@ -5,7 +5,7 @@
 }:
 rec {
   all = pkgs.symlinkJoin {
-    name = "dms-greeter-nixos-tests";
+    name = "advs-greeter-nixos-tests";
     paths = [
       greeter-niri-module
     ];

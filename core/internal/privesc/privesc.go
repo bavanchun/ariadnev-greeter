@@ -24,7 +24,7 @@ const (
 )
 
 // EnvVar selects a specific tool when set to one of: sudo, doas, run0.
-const EnvVar = "DMS_PRIVESC"
+const EnvVar = "ADVS_PRIVESC"
 
 var detectionOrder = []Tool{ToolSudo, ToolDoas, ToolRun0}
 
@@ -56,7 +56,7 @@ func AvailableTools() []Tool {
 	return out
 }
 
-// EnvOverride returns the tool selected by the $DMS_PRIVESC env var (if any)
+// EnvOverride returns the tool selected by the $ADVS_PRIVESC env var (if any)
 // along with ok=true when the variable is set.
 func EnvOverride() (Tool, bool) {
 	v := strings.ToLower(strings.TrimSpace(os.Getenv(EnvVar)))
@@ -236,7 +236,7 @@ func stdinIsTTY() bool {
 }
 
 // PromptCLI interactively prompts the user to pick a privilege tool when more
-// than one is installed and $DMS_PRIVESC is not set. If stdin is not a TTY,
+// than one is installed and $ADVS_PRIVESC is not set. If stdin is not a TTY,
 // or only one tool is available, or the env var is set, the detected tool is
 // returned without any prompt.
 func PromptCLI(out io.Writer, in io.Reader) (Tool, error) {

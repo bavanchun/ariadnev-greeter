@@ -4,7 +4,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import qs.DankCommon.Common as DankCommon
+import qs.AdvCommon.Common as AdvCommon
 import qs.Modules.Greetd
 import qs.Services
 import "StockThemes.js" as StockThemes
@@ -399,21 +399,21 @@ Singleton {
             "expressiveEffects": currentAnimationBaseDuration * 0.4
         })
 
-    property string fontFamily: typeof GreetdSettings !== "undefined" ? resolvedFontFamily(GreetdSettings.getEffectiveFontFamily()) : DankCommon.Fonts.sans
-    property string monoFontFamily: typeof GreetdSettings !== "undefined" ? resolvedMonoFontFamily(GreetdSettings.monoFontFamily) : DankCommon.Fonts.mono
+    property string fontFamily: typeof GreetdSettings !== "undefined" ? resolvedFontFamily(GreetdSettings.getEffectiveFontFamily()) : AdvCommon.Fonts.sans
+    property string monoFontFamily: typeof GreetdSettings !== "undefined" ? resolvedMonoFontFamily(GreetdSettings.monoFontFamily) : AdvCommon.Fonts.mono
     property int fontWeight: typeof GreetdSettings !== "undefined" ? GreetdSettings.fontWeight : Font.Normal
     property real fontScale: typeof GreetdSettings !== "undefined" ? GreetdSettings.fontScale : 1.0
     property real cornerRadius: typeof GreetdSettings !== "undefined" ? GreetdSettings.cornerRadius : 12
 
     function resolvedFontFamily(family) {
         if (family === defaultFontFamily)
-            return DankCommon.Fonts.sans;
+            return AdvCommon.Fonts.sans;
         return family;
     }
 
     function resolvedMonoFontFamily(family) {
         if (family === defaultMonoFontFamily)
-            return DankCommon.Fonts.mono;
+            return AdvCommon.Fonts.mono;
         return family;
     }
 
@@ -470,7 +470,7 @@ Singleton {
         }
     }
 
-    readonly property string _greeterCacheDir: Quickshell.env("DMS_GREET_CFG_DIR") || "/var/cache/dms-greeter"
+    readonly property string _greeterCacheDir: Quickshell.env("ADVS_GREET_CFG_DIR") || "/var/cache/advs-greeter"
 
     property string greeterColorsBaseDir: root._greeterCacheDir
 

@@ -10,10 +10,10 @@ on:
         required: true
         type: choice
         options:
-          - dms-greeter
-          - dms-greeter-git
+          - advs-greeter
+          - advs-greeter-git
           - both
-        default: "dms-greeter"
+        default: "advs-greeter"
       version:
         description: "Stable release tag/version (e.g. v1.0.0). Ignored for git"
         type: string
@@ -35,16 +35,16 @@ jobs:
   build-and-deploy:
     name: Build & Deploy XBPS package
     runs-on: ubuntu-latest
-    if: github.repository == 'AvengeMedia/dank-greeter'
+    if: github.repository == 'bavanchun/ariadnev-greeter'
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: auto
       AWS_EC2_METADATA_DISABLED: true
-      R2_BUCKET: danklinux-void
+      R2_BUCKET: ariadnev-void
       R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
-      # Shared DMS Void prefix so existing installs keep upgrading.
-      R2_PREFIX: dms
+      # Shared ADVS Void prefix so existing installs keep upgrading.
+      R2_PREFIX: advs
       REPOSITORY_DIR: ${{ github.workspace }}/r2-repo
       SOURCE_COMMIT: ${{ github.sha }}
     steps:
@@ -59,16 +59,16 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
             # schedule → git snapshot only
-            echo 'packages=["dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+            echo 'packages=["advs-greeter-git"]' >> "$GITHUB_OUTPUT"
             echo "stable_version=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           case "${{ github.event.inputs.package }}" in
             both)
-              echo 'packages=["dms-greeter","dms-greeter-git"]' >> "$GITHUB_OUTPUT"
+              echo 'packages=["advs-greeter","advs-greeter-git"]' >> "$GITHUB_OUTPUT"
               ;;
-            dms-greeter|dms-greeter-git)
+            advs-greeter|advs-greeter-git)
               echo 'packages=["${{ github.event.inputs.package }}"]' >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -102,8 +102,8 @@ jobs:
 
       - name: Inject templates
         run: |
-          cp -R distro/void/srcpkgs/dms-greeter void-packages/srcpkgs/
-          cp -R distro/void/srcpkgs/dms-greeter-git void-packages/srcpkgs/
+          cp -R distro/void/srcpkgs/advs-greeter void-packages/srcpkgs/
+          cp -R distro/void/srcpkgs/advs-greeter-git void-packages/srcpkgs/
 
       - name: Enable unprivileged user namespaces (Ubuntu 24.04)
         run: |
@@ -119,10 +119,10 @@ jobs:
           echo "${{ secrets.XBPS_PRIVATE_KEY }}" > /tmp/xbps_privkey.pem
           chmod 600 /tmp/xbps_privkey.pem
 
-          openssl rsa -in /tmp/xbps_privkey.pem -pubout -out /tmp/dms-key.pub
+          openssl rsa -in /tmp/xbps_privkey.pem -pubout -out /tmp/advs-key.pub
           rm -f /tmp/xbps_privkey.pem
 
-          FINGERPRINT=$(openssl rsa -pubin -in /tmp/dms-key.pub -outform DER 2>/dev/null | openssl dgst -md5 -c | tr '[:upper:]' '[:lower:]' | awk '{print $NF}')
+          FINGERPRINT=$(openssl rsa -pubin -in /tmp/advs-key.pub -outform DER 2>/dev/null | openssl dgst -md5 -c | tr '[:upper:]' '[:lower:]' | awk '{print $NF}')
 
           mkdir -p /tmp/keys
           cat <<EOF > "/tmp/keys/${FINGERPRINT}.plist"
@@ -130,11 +130,11 @@ jobs:
           <plist version="1.0">
           <dict>
           	<key>public-key</key>
-          	<data>$(base64 -w0 /tmp/dms-key.pub)</data>
+          	<data>$(base64 -w0 /tmp/advs-key.pub)</data>
           	<key>public-key-size</key>
           	<integer>4096</integer>
           	<key>signature-by</key>
-          	<string>AvengeMedia</string>
+          	<string>bavanchun</string>
           </dict>
           </plist>
           EOF
@@ -151,12 +151,12 @@ jobs:
           mkdir -p void-packages/common/repo-keys
           cp "/tmp/keys/${FINGERPRINT}.plist" "void-packages/common/repo-keys/${FINGERPRINT}.plist"
 
-          rm -rf /tmp/keys /tmp/dms-key.pub
+          rm -rf /tmp/keys /tmp/advs-key.pub
 
       - name: Configure repositories
         run: |
-          echo "repository=https://void.danklinux.com/danklinux/current" >> void-packages/etc/xbps.d/repos-remote.conf
-          echo "repository=https://void.danklinux.com/danklinux/current" >> void-packages/etc/xbps.d/repos-remote-x86_64-multilib.conf
+          echo "repository=https://void.ariadnev.vchun.dev/ariadnev/current" >> void-packages/etc/xbps.d/repos-remote.conf
+          echo "repository=https://void.ariadnev.vchun.dev/ariadnev/current" >> void-packages/etc/xbps.d/repos-remote-x86_64-multilib.conf
 
           if [ -d "r2-repo/current" ]; then
             mkdir -p void-packages/hostdir/binpkgs
@@ -180,10 +180,10 @@ jobs:
             echo "=========================================="
             echo "Building $PACKAGE"
             echo "=========================================="
-            if [[ "$PACKAGE" == "dms-greeter-git" ]]; then
-              bash distro/scripts/void-build.sh dms-greeter-git "${FORCE_ARGS[@]}"
+            if [[ "$PACKAGE" == "advs-greeter-git" ]]; then
+              bash distro/scripts/void-build.sh advs-greeter-git "${FORCE_ARGS[@]}"
             else
-              bash distro/scripts/void-build.sh dms-greeter --version="$RELEASE_VER" "${FORCE_ARGS[@]}"
+              bash distro/scripts/void-build.sh advs-greeter --version="$RELEASE_VER" "${FORCE_ARGS[@]}"
             fi
           done
 
@@ -209,7 +209,7 @@ jobs:
           echo "${{ secrets.XBPS_PRIVATE_KEY }}" > /tmp/xbps_privkey.pem
           chmod 600 /tmp/xbps_privkey.pem
 
-          xbps-rindex --sign --signedby "AvengeMedia <AvengeMedia.US@gmail.com>" --privkey /tmp/xbps_privkey.pem $(pwd)
+          xbps-rindex --sign --signedby "bavanchun <bavanchun.US@gmail.com>" --privkey /tmp/xbps_privkey.pem $(pwd)
           xbps-rindex --sign-pkg --privkey /tmp/xbps_privkey.pem $(pwd)/*.xbps
 
           rm -f /tmp/xbps_privkey.pem

@@ -63,7 +63,7 @@ func logSink(logTag, cacheDir string) (*os.File, func(), error) {
 	if journalBinary, err := exec.LookPath("systemd-cat"); err == nil {
 		readEnd, writeEnd, pipeErr := os.Pipe()
 		if pipeErr == nil {
-			journal := exec.Command(journalBinary, "-t", "dms-greeter/"+logTag, "-p", "info")
+			journal := exec.Command(journalBinary, "-t", "advs-greeter/"+logTag, "-p", "info")
 			journal.Stdin = readEnd
 			if journal.Start() == nil {
 				readEnd.Close()

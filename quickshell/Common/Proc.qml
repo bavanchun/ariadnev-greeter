@@ -1,12 +1,12 @@
 pragma Singleton
 
 import Quickshell
-import qs.DankCommon.Common as DankCommon
+import qs.AdvCommon.Common as AdvCommon
 
 Singleton {
-    readonly property string dmsBin: DankCommon.Proc.dmsBin
+    readonly property string advsBin: AdvCommon.Proc.advsBin
 
     function runCommand(id, command, callback, debounceMs, timeoutMs) {
-        DankCommon.Proc.runCommand(id, command, callback, debounceMs, timeoutMs);
+        AdvCommon.Proc.runCommand(id, command, callback, debounceMs, timeoutMs);
     }
 }

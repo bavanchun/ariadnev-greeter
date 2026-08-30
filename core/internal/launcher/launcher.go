@@ -1,4 +1,4 @@
-// Package launcher replaces the historical dms-greeter bash wrapper: it
+// Package launcher replaces the historical advs-greeter bash wrapper: it
 // prepares the greeter environment, generates a per-compositor config that
 // spawns quickshell, and runs the compositor under greetd supervision.
 package launcher
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const DefaultCacheDir = "/var/cache/dms-greeter"
+const DefaultCacheDir = "/var/cache/advs-greeter"
 
 type Options struct {
 	Compositor          string
@@ -77,7 +77,7 @@ func Run(opts Options) error {
 
 	info, err := os.Stat(opts.CacheDir)
 	if err != nil || !info.IsDir() {
-		return fmt.Errorf("cache directory %q does not exist.\n  Run 'dms-greeter sync' to initialize it, or pass --cache-dir to an existing directory", opts.CacheDir)
+		return fmt.Errorf("cache directory %q does not exist.\n  Run 'advs-greeter sync' to initialize it, or pass --cache-dir to an existing directory", opts.CacheDir)
 	}
 
 	if err := setupEnvironment(opts); err != nil {
@@ -104,8 +104,8 @@ func setupEnvironment(opts Options) error {
 		"QT_WAYLAND_DISABLE_WINDOWDECORATION": "1",
 		"QT_NO_XDG_DESKTOP_PORTAL":            "1",
 		"EGL_PLATFORM":                        "gbm",
-		"DMS_RUN_GREETER":                     "1",
-		"DMS_GREET_CFG_DIR":                   opts.CacheDir,
+		"ADVS_RUN_GREETER":                     "1",
+		"ADVS_GREET_CFG_DIR":                   opts.CacheDir,
 		"HOME":                                opts.CacheDir,
 		"XDG_STATE_HOME":                      filepath.Join(opts.CacheDir, ".local/state"),
 		"XDG_DATA_HOME":                       filepath.Join(opts.CacheDir, ".local/share"),
@@ -117,10 +117,10 @@ func setupEnvironment(opts Options) error {
 		}
 	}
 
-	if err := exportRememberFlag(opts.RememberLastSession, "DMS_GREET_REMEMBER_LAST_SESSION", "DMS_SAVE_SESSION"); err != nil {
+	if err := exportRememberFlag(opts.RememberLastSession, "ADVS_GREET_REMEMBER_LAST_SESSION", "ADVS_SAVE_SESSION"); err != nil {
 		return err
 	}
-	if err := exportRememberFlag(opts.RememberLastUser, "DMS_GREET_REMEMBER_LAST_USER", "DMS_SAVE_USERNAME"); err != nil {
+	if err := exportRememberFlag(opts.RememberLastUser, "ADVS_GREET_REMEMBER_LAST_USER", "ADVS_SAVE_USERNAME"); err != nil {
 		return err
 	}
 

@@ -1,5 +1,5 @@
-BINARY_NAME=dms-greeter
-SOURCE_DIR=cmd/dms-greeter
+BINARY_NAME=advs-greeter
+SOURCE_DIR=cmd/advs-greeter
 BUILD_DIR=bin
 SHELL_SRC=../quickshell
 EMBED_DIR=internal/shellembed/dist
@@ -27,11 +27,11 @@ all: build completions
 
 # Copy the quickshell UI into the embed dir (gitignored) so tagged builds
 # can bake it into the binary. Dev-only files are stripped. tar -h dereferences
-# the DankCommon submodule symlink; go:embed rejects symlinks. .qmlls.ini is
+# the AdvCommon submodule symlink; go:embed rejects symlinks. .qmlls.ini is
 # excluded at copy time: it's a symlink into the quickshell runtime VFS and
 # dereferencing it fails whenever the shell isn't running.
 sync-shell:
-	@test -f $(SHELL_SRC)/DankCommon/Widgets/DankIcon.qml || { echo "DankCommon missing: run git submodule update --init"; exit 1; }
+	@test -f $(SHELL_SRC)/AdvCommon/Widgets/AdvIcon.qml || { echo "AdvCommon missing: run git submodule update --init"; exit 1; }
 	@rm -rf $(EMBED_DIR)
 	@mkdir -p $(EMBED_DIR)
 	@tar -C $(SHELL_SRC) --exclude=.qmlls.ini -chf - . | tar -C $(EMBED_DIR) -xf -

@@ -4,11 +4,11 @@
   ...
 }:
 pkgs.testers.runNixOSTest {
-  name = "dms-greeter-niri-module";
+  name = "advs-greeter-niri-module";
 
   nodes.machine = {
     imports = [
-      self.nixosModules.dank-greeter
+      self.nixosModules.ariadnev-greeter
     ];
 
     users.groups.greeter = { };
@@ -27,7 +27,7 @@ pkgs.testers.runNixOSTest {
 
     programs.niri.enable = true;
 
-    programs.dms-greeter = {
+    programs.advs-greeter = {
       enable = true;
       compositor.name = "niri";
     };
@@ -51,14 +51,14 @@ pkgs.testers.runNixOSTest {
 
     greetd_config_path = config_match.group(1)
     greetd_config = machine.succeed(f"cat {greetd_config_path}")
-    t.assertIn("dms-greeter", greetd_config)
+    t.assertIn("advs-greeter", greetd_config)
     t.assertIn("[initial_session]", greetd_config)
 
     initial_session = greetd_config.split("[initial_session]", 1)[1]
     t.assertIn('user = "alice"', initial_session)
     t.assertIn("systemd-cat", initial_session)
 
-    script_match = re.search(r'command\s*=\s*"([^"]+/bin/dms-greeter-session)"', greetd_config)
+    script_match = re.search(r'command\s*=\s*"([^"]+/bin/advs-greeter-session)"', greetd_config)
     if script_match is None:
         raise AssertionError(greetd_config)
 
@@ -66,6 +66,6 @@ pkgs.testers.runNixOSTest {
     script = machine.succeed(f"cat {script_path}")
     t.assertIn("--command", script)
     t.assertIn("niri", script)
-    t.assertIn("/bin/dms-greeter", script)
+    t.assertIn("/bin/advs-greeter", script)
   '';
 }

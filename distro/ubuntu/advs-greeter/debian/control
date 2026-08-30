@@ -1,0 +1,27 @@
+Source: advs-greeter
+Section: x11
+Priority: optional
+Maintainer: Avenge Media <bavanchun.US@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               golang-go (>= 2:1.22~)
+Standards-Version: 4.6.2
+Homepage: https://github.com/bavanchun/ariadnev-greeter
+Vcs-Browser: https://github.com/bavanchun/ariadnev-greeter
+Vcs-Git: https://github.com/bavanchun/ariadnev-greeter.git
+
+Package: advs-greeter
+Architecture: amd64 arm64
+Depends: ${misc:Depends},
+  greetd,
+  quickshell-git | quickshell
+Conflicts: advs-greeter-git
+Replaces: advs-greeter-git
+Suggests: niri | hyprland | sway
+Description: ADVS Greeter for greetd
+ ADVS Greeter is a greetd login screen with the Adv Material aesthetic.
+ A single Go binary with the Quickshell UI embedded; the UI is extracted
+ to the greeter cache directory at startup.
+ .
+ Supports multiple compositors including Niri, Hyprland, and Sway with
+ session selection, user authentication, and dynamic theming synced from
+ AriadnevShell.

@@ -9,8 +9,8 @@ import Quickshell.Services.Greetd
 import qs.Common
 import qs.Services
 import qs.Widgets
-import qs.DankCommon.Session
-import "../../DankCommon/Common/LayoutCodes.js" as LayoutCodes
+import qs.AdvCommon.Session
+import "../../AdvCommon/Common/LayoutCodes.js" as LayoutCodes
 
 Item {
     id: root
@@ -617,7 +617,7 @@ Item {
 
     Process {
         id: greeterAutoLoginPendingProcess
-        command: ["sh", "-c", "mkdir -p $(dirname " + JSON.stringify((Quickshell.env("DMS_GREET_CFG_DIR") || "/var/cache/dms-greeter") + "/.local/state/auto-login-sync-pending") + ") && touch " + JSON.stringify((Quickshell.env("DMS_GREET_CFG_DIR") || "/var/cache/dms-greeter") + "/.local/state/auto-login-sync-pending")]
+        command: ["sh", "-c", "mkdir -p $(dirname " + JSON.stringify((Quickshell.env("ADVS_GREET_CFG_DIR") || "/var/cache/advs-greeter") + "/.local/state/auto-login-sync-pending") + ") && touch " + JSON.stringify((Quickshell.env("ADVS_GREET_CFG_DIR") || "/var/cache/advs-greeter") + "/.local/state/auto-login-sync-pending")]
         running: false
     }
 
@@ -764,7 +764,7 @@ Item {
         color: GreetdSettings.effectiveWallpaperBackgroundColor
     }
 
-    DankBackdrop {
+    AdvBackdrop {
         anchors.fill: parent
         screenName: root.screenName
         visible: {
@@ -985,7 +985,7 @@ Item {
                         Layout.preferredHeight: 60
                         visible: GreetdSettings.lockScreenShowProfileImage || root.pickerAvailable
 
-                        DankCircularImage {
+                        AdvCircularImage {
                             anchors.fill: parent
                             imageSource: {
                                 const displayUser = GreeterState.username || root.pickerThemeUsername;
@@ -1029,7 +1029,7 @@ Item {
                                 }
                             }
 
-                            DankIcon {
+                            AdvIcon {
                                 anchors.centerIn: parent
                                 name: "switch_account"
                                 size: 24
@@ -1087,7 +1087,7 @@ Item {
                             onManualEntryRequested: root.enterManualUsernameEntry()
                         }
 
-                        DankIcon {
+                        AdvIcon {
                             id: lockIcon
 
                             anchors.left: parent.left
@@ -1253,7 +1253,7 @@ Item {
                             }
                         }
 
-                        DankActionButton {
+                        AdvActionButton {
                             id: revealButton
 
                             anchors.right: externalAuthButton.visible ? externalAuthButton.left : (virtualKeyboardButton.visible ? virtualKeyboardButton.left : (enterButton.visible ? enterButton.left : parent.right))
@@ -1265,7 +1265,7 @@ Item {
                             enabled: visible
                             onClicked: parent.showPassword = !parent.showPassword
                         }
-                        DankActionButton {
+                        AdvActionButton {
                             id: externalAuthButton
 
                             anchors.right: virtualKeyboardButton.visible ? virtualKeyboardButton.left : (enterButton.visible ? enterButton.left : parent.right)
@@ -1277,7 +1277,7 @@ Item {
                             enabled: visible
                             onClicked: root.startAuthSession(false)
                         }
-                        DankActionButton {
+                        AdvActionButton {
                             id: virtualKeyboardButton
 
                             anchors.right: enterButton.visible ? enterButton.left : parent.right
@@ -1296,7 +1296,7 @@ Item {
                             }
                         }
 
-                        DankActionButton {
+                        AdvActionButton {
                             id: enterButton
 
                             anchors.right: parent.right
@@ -1416,7 +1416,7 @@ Item {
                         width: Theme.iconSize
                         height: Theme.iconSize
 
-                        DankIcon {
+                        AdvIcon {
                             name: "keyboard"
                             size: Theme.iconSize
                             color: "white"
@@ -1477,7 +1477,7 @@ Item {
                 visible: GreetdSettings.weatherEnabled && WeatherService.weather.available
                 anchors.verticalCenter: parent.verticalCenter
 
-                DankIcon {
+                AdvIcon {
                     name: WeatherService.getWeatherIcon(WeatherService.weather.wCode)
                     size: Theme.iconSize
                     color: "white"
@@ -1506,7 +1506,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: NetworkService.networkStatus !== "disconnected" || (BluetoothService.available && BluetoothService.enabled) || (AudioService.sink && AudioService.sink.audio)
 
-                DankIcon {
+                AdvIcon {
                     name: NetworkService.networkStatus === "ethernet" ? "lan" : NetworkService.wifiSignalIcon
                     size: Theme.iconSize - 2
                     color: NetworkService.networkStatus !== "disconnected" ? "white" : Qt.rgba(255, 255, 255, 0.5)
@@ -1514,7 +1514,7 @@ Item {
                     visible: NetworkService.networkStatus !== "disconnected"
                 }
 
-                DankIcon {
+                AdvIcon {
                     name: "bluetooth"
                     size: Theme.iconSize - 2
                     color: "white"
@@ -1522,7 +1522,7 @@ Item {
                     visible: BluetoothService.available && BluetoothService.enabled
                 }
 
-                DankIcon {
+                AdvIcon {
                     name: {
                         if (!AudioService.sink?.audio) {
                             return "volume_up";
@@ -1556,7 +1556,7 @@ Item {
                 visible: BatteryService.batteryAvailable
                 anchors.verticalCenter: parent.verticalCenter
 
-                DankIcon {
+                AdvIcon {
                     name: {
                         if (BatteryService.isCharging) {
                             if (BatteryService.batteryLevel >= 90) {
@@ -1663,7 +1663,7 @@ Item {
             }
         }
 
-        DankActionButton {
+        AdvActionButton {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.margins: Theme.spacingXL
@@ -1705,7 +1705,7 @@ Item {
                 }
             }
 
-            DankDropdown {
+            AdvDropdown {
                 id: sessionDropdown
                 anchors.fill: parent
                 text: ""
@@ -1954,8 +1954,8 @@ Item {
             if (root.autoLoginOnSuccess)
                 greeterAutoLoginPendingProcess.running = true;
             pendingLaunchCommand = sessionCmd;
-            pendingLaunchEnv = ["XDG_SESSION_TYPE=wayland", "DMS_GREETER_AUTH_TIME=" + Math.floor(Date.now() / 1000)];
-            if (Quickshell.env("DMS_VOID") === "1")
+            pendingLaunchEnv = ["XDG_SESSION_TYPE=wayland", "ADVS_GREETER_AUTH_TIME=" + Math.floor(Date.now() / 1000)];
+            if (Quickshell.env("ADVS_VOID") === "1")
                 pendingLaunchEnv.push("LIBSEAT_BACKEND=logind");
             memoryFlushTimer.restart();
         }
@@ -2009,7 +2009,7 @@ Item {
             pendingLaunchCommand = "";
             pendingLaunchEnv = [];
             const sessionArgs = sessionCommand.trim().split(/\s+/);
-            const needsVoidDbusSession = Quickshell.env("DMS_VOID") === "1" && !Quickshell.env("DBUS_SESSION_BUS_ADDRESS") && sessionArgs[0] !== "dbus-run-session";
+            const needsVoidDbusSession = Quickshell.env("ADVS_VOID") === "1" && !Quickshell.env("DBUS_SESSION_BUS_ADDRESS") && sessionArgs[0] !== "dbus-run-session";
             const launchArgs = needsVoidDbusSession ? ["dbus-run-session"].concat(sessionArgs) : sessionArgs;
             Greetd.launch(launchArgs, launchEnv);
         }

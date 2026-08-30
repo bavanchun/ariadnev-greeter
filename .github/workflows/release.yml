@@ -61,10 +61,10 @@ jobs:
         run: |
           VERSION=${{ github.ref_name }}
           BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          BINARY_NAME="dms-greeter-${{ matrix.goos }}-${{ matrix.goarch }}"
+          BINARY_NAME="advs-greeter-${{ matrix.goos }}-${{ matrix.goarch }}"
           make -C core sync-shell
           cd core
-          go build -tags withshell -ldflags "-s -w -X main.Version=${VERSION#v} -X main.Commit=${{ github.sha }} -X main.BuildTime=${BUILD_TIME}" -o "../${BINARY_NAME}" ./cmd/dms-greeter
+          go build -tags withshell -ldflags "-s -w -X main.Version=${VERSION#v} -X main.Commit=${{ github.sha }} -X main.BuildTime=${BUILD_TIME}" -o "../${BINARY_NAME}" ./cmd/advs-greeter
           cd ..
           gzip -c "${BINARY_NAME}" > "${BINARY_NAME}.gz"
           tar -czf "${BINARY_NAME}.tar.gz" "${BINARY_NAME}"
@@ -74,12 +74,12 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dms-greeter-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: advs-greeter-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
-            dms-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.gz
-            dms-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.gz.sha256
-            dms-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
-            dms-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz.sha256
+            advs-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.gz
+            advs-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.gz.sha256
+            advs-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+            advs-greeter-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz.sha256
 
   package_completions:
     name: Package Shell Completions
@@ -99,23 +99,23 @@ jobs:
         run: |
           VERSION_NUM=${GITHUB_REF_NAME#v}
           cd core
-          go build -o /tmp/dms-greeter ./cmd/dms-greeter
+          go build -o /tmp/advs-greeter ./cmd/advs-greeter
           mkdir -p completions
-          /tmp/dms-greeter completion bash > completions/dms-greeter
-          /tmp/dms-greeter completion zsh > completions/_dms-greeter
-          /tmp/dms-greeter completion fish > completions/dms-greeter.fish
-          /tmp/dms-greeter completion powershell > completions/dms-greeter.ps1
-          tar -czf "../dms-greeter-completions-${VERSION_NUM}.tar.gz" -C completions .
+          /tmp/advs-greeter completion bash > completions/advs-greeter
+          /tmp/advs-greeter completion zsh > completions/_advs-greeter
+          /tmp/advs-greeter completion fish > completions/advs-greeter.fish
+          /tmp/advs-greeter completion powershell > completions/advs-greeter.ps1
+          tar -czf "../advs-greeter-completions-${VERSION_NUM}.tar.gz" -C completions .
           cd ..
-          sha256sum "dms-greeter-completions-${VERSION_NUM}.tar.gz" > "dms-greeter-completions-${VERSION_NUM}.tar.gz.sha256"
+          sha256sum "advs-greeter-completions-${VERSION_NUM}.tar.gz" > "advs-greeter-completions-${VERSION_NUM}.tar.gz.sha256"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dms-greeter-completions
+          name: advs-greeter-completions
           path: |
-            dms-greeter-completions-*.tar.gz
-            dms-greeter-completions-*.tar.gz.sha256
+            advs-greeter-completions-*.tar.gz
+            advs-greeter-completions-*.tar.gz.sha256
 
   create_release:
     name: Create GitHub Release
@@ -163,15 +163,15 @@ jobs:
           go-version-file: ./core/go.mod
 
       # Distro packages build offline from this tarball: it carries the checked-out
-      # dank-qml-common submodule plus vendored Go dependencies.
+      # ariadnev-qml-common submodule plus vendored Go dependencies.
       - name: Generate vendored source tarball
         run: |
           VERSION_NUM=${GITHUB_REF_NAME#v}
           cd core && go mod vendor && cd ..
-          tar czf "dank-greeter-${VERSION_NUM}.tar.gz" \
-            --transform "s,^,dank-greeter-${VERSION_NUM}/,S" \
+          tar czf "ariadnev-greeter-${VERSION_NUM}.tar.gz" \
+            --transform "s,^,ariadnev-greeter-${VERSION_NUM}/,S" \
             --exclude-vcs \
-            --exclude=artifacts --exclude="dank-greeter-*.tar.gz" *
+            --exclude=artifacts --exclude="ariadnev-greeter-*.tar.gz" *
 
       - name: Create release and upload assets
         env:
@@ -188,10 +188,10 @@ jobs:
             --notes-file CHANGELOG.md \
             $PRERELEASE_FLAG
 
-          find ./artifacts -type f -name "dms-greeter-*" | while read file; do
+          find ./artifacts -type f -name "advs-greeter-*" | while read file; do
             echo "Uploading: $file"
             gh release upload "$VERSION" "$file" --clobber
           done
 
           VERSION_NUM=${VERSION#v}
-          gh release upload "$VERSION" "dank-greeter-${VERSION_NUM}.tar.gz" --clobber
+          gh release upload "$VERSION" "ariadnev-greeter-${VERSION_NUM}.tar.gz" --clobber

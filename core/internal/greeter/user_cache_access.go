@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/AvengeMedia/dank-greeter/core/internal/utils"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/utils"
 )
 
 var sessionWallpaperStringKeys = []string{"wallpaperPath", "wallpaperPathLight", "wallpaperPathDark"}
@@ -56,9 +56,9 @@ func greeterTraversalDirs(homeDir string) []string {
 
 func greeterStateDirs(homeDir string) []string {
 	return []string{
-		filepath.Join(homeDir, ".config", "DankMaterialShell"),
-		filepath.Join(homeDir, ".local", "state", "DankMaterialShell"),
-		filepath.Join(homeDir, ".cache", "DankMaterialShell"),
+		filepath.Join(homeDir, ".config", "AriadnevShell"),
+		filepath.Join(homeDir, ".local", "state", "AriadnevShell"),
+		filepath.Join(homeDir, ".cache", "AriadnevShell"),
 	}
 }
 

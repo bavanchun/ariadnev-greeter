@@ -1,29 +1,29 @@
 #!/bin/bash
-# OBS upload for dms-greeter / dms-greeter-git (home:AvengeMedia:danklinux).
+# OBS upload for advs-greeter / advs-greeter-git (home:bavanchun:ariadnev).
 #
-# Stable (dms-greeter): release tarball + vendored Go from GitHub releases.
-# Git (dms-greeter-git): packs the current checkout (submodule + go mod vendor)
-# into dms-greeter-git-source.tar.gz; versions as BASE+gitCOUNT.HASH.
+# Stable (advs-greeter): release tarball + vendored Go from GitHub releases.
+# Git (advs-greeter-git): packs the current checkout (submodule + go mod vendor)
+# into advs-greeter-git-source.tar.gz; versions as BASE+gitCOUNT.HASH.
 #
 # Usage:
-#   ./distro/scripts/obs-upload.sh [debian|opensuse] [dms-greeter|dms-greeter-git] [--version=X.Y.Z] [--rebuild=N|N] [message]
+#   ./distro/scripts/obs-upload.sh [debian|opensuse] [advs-greeter|advs-greeter-git] [--version=X.Y.Z] [--rebuild=N|N] [message]
 #
 # Examples:
 #   ./distro/scripts/obs-upload.sh "Update to v1.0.0"
 #   ./distro/scripts/obs-upload.sh opensuse --version=1.0.0
-#   ./distro/scripts/obs-upload.sh dms-greeter-git
-#   ./distro/scripts/obs-upload.sh dms-greeter-git 2
-#   ./distro/scripts/obs-upload.sh debian dms-greeter-git --rebuild=2
+#   ./distro/scripts/obs-upload.sh advs-greeter-git
+#   ./distro/scripts/obs-upload.sh advs-greeter-git 2
+#   ./distro/scripts/obs-upload.sh debian advs-greeter-git --rebuild=2
 
 set -euo pipefail
 
-REPO="AvengeMedia/dank-greeter"
-PACKAGE="dms-greeter"
-OBS_PROJECT="home:AvengeMedia:danklinux"
+REPO="bavanchun/ariadnev-greeter"
+PACKAGE="advs-greeter"
+OBS_PROJECT="home:bavanchun:ariadnev"
 OBS_BASE="${OBS_BASE:-$HOME/.cache/osc-checkouts}"
 DEB_EPOCH=1
-MAINTAINER="Avenge Media <AvengeMedia.US@gmail.com>"
-GO_TOOLCHAIN_CACHE="${GO_TOOLCHAIN_CACHE:-$HOME/.cache/dms-greeter-obs-go-toolchain}"
+MAINTAINER="Avenge Media <bavanchun.US@gmail.com>"
+GO_TOOLCHAIN_CACHE="${GO_TOOLCHAIN_CACHE:-$HOME/.cache/advs-greeter-obs-go-toolchain}"
 
 UPLOAD_DEBIAN=true
 UPLOAD_OPENSUSE=true
@@ -41,7 +41,7 @@ for arg in "$@"; do
         UPLOAD_DEBIAN=false
         UPLOAD_OPENSUSE=true
         ;;
-    dms-greeter|dms-greeter-git)
+    advs-greeter|advs-greeter-git)
         PACKAGE="$arg"
         ;;
     --version=*)
@@ -58,7 +58,7 @@ for arg in "$@"; do
         fi
         ;;
     *)
-        # Bare integer shorthand: ... dms-greeter-git 2
+        # Bare integer shorthand: ... advs-greeter-git 2
         REBUILD_RELEASE="$arg"
         ;;
     esac
@@ -70,7 +70,7 @@ cd "$REPO_ROOT"
 
 if [[ ! -d "distro/debian/$PACKAGE" ]]; then
     echo "Error: Package tree missing: distro/debian/$PACKAGE"
-    echo "Run this script from the dank-greeter repository"
+    echo "Run this script from the ariadnev-greeter repository"
     exit 1
 fi
 
@@ -99,7 +99,7 @@ ensure_obs_package() {
     osc meta pkg "$OBS_PROJECT" "$PACKAGE" -F - <<EOF
 <package name="$PACKAGE" project="$OBS_PROJECT">
   <title>$PACKAGE</title>
-  <description>DMS Greeter packaging from dank-greeter</description>
+  <description>ADVS Greeter packaging from ariadnev-greeter</description>
 </package>
 EOF
 }
@@ -138,30 +138,30 @@ stage_go_toolchains() {
     printf '%s' "$ver"
 }
 
-# Pack current checkout for git OBS builds (submodule + vendor + DankCommon link)
+# Pack current checkout for git OBS builds (submodule + vendor + AdvCommon link)
 pack_git_source_tree() {
     local dest_dir="$1"
     local tmp pack_root
 
-    if [[ ! -e "$REPO_ROOT/dank-qml-common/DankCommon/Widgets/DankIcon.qml" ]]; then
-        echo "Error: dank-qml-common submodule missing. Run: git submodule update --init"
+    if [[ ! -e "$REPO_ROOT/ariadnev-qml-common/AdvCommon/Widgets/AdvIcon.qml" ]]; then
+        echo "Error: ariadnev-qml-common submodule missing. Run: git submodule update --init"
         exit 1
     fi
 
     tmp="$(mktemp -d)"
-    pack_root="$tmp/dms-greeter-git-source"
+    pack_root="$tmp/advs-greeter-git-source"
     mkdir -p "$pack_root"
 
     # Tracked files via git archive, then overlay submodule (archive skips submodule content)
     git archive --format=tar HEAD | tar -x -C "$pack_root"
-    rm -rf "$pack_root/dank-qml-common"
-    mkdir -p "$pack_root/dank-qml-common"
-    tar -C "$REPO_ROOT/dank-qml-common" --exclude='.git' -cf - . \
-        | tar -C "$pack_root/dank-qml-common" -xf -
-    rm -rf "$pack_root/quickshell/DankCommon"
-    ln -sfn ../dank-qml-common/DankCommon "$pack_root/quickshell/DankCommon"
-    test -e "$pack_root/quickshell/DankCommon/Widgets/DankIcon.qml" \
-        || { echo "Error: DankCommon missing after pack"; exit 1; }
+    rm -rf "$pack_root/ariadnev-qml-common"
+    mkdir -p "$pack_root/ariadnev-qml-common"
+    tar -C "$REPO_ROOT/ariadnev-qml-common" --exclude='.git' -cf - . \
+        | tar -C "$pack_root/ariadnev-qml-common" -xf -
+    rm -rf "$pack_root/quickshell/AdvCommon"
+    ln -sfn ../ariadnev-qml-common/AdvCommon "$pack_root/quickshell/AdvCommon"
+    test -e "$pack_root/quickshell/AdvCommon/Widgets/AdvIcon.qml" \
+        || { echo "Error: AdvCommon missing after pack"; exit 1; }
 
     # Vendor Go deps for offline OBS (release tarballs already vendor; git may not)
     if [[ ! -d "$pack_root/core/vendor" ]]; then
@@ -176,8 +176,8 @@ pack_git_source_tree() {
     fi
 
     mkdir -p "$dest_dir"
-    rm -rf "$dest_dir/dms-greeter-git-source"
-    mv "$pack_root" "$dest_dir/dms-greeter-git-source"
+    rm -rf "$dest_dir/advs-greeter-git-source"
+    mv "$pack_root" "$dest_dir/advs-greeter-git-source"
     rm -rf "$tmp"
 }
 
@@ -216,7 +216,7 @@ for line in lines:
         out.append(line if line.endswith("\n") else line + "\n")
 out.append("%changelog\n")
 out.append(
-    f"* {date_str} AvengeMedia <contact@avengemedia.com> - 1:{version}-{release}\n"
+    f"* {date_str} VChun <hoangbavan4478@gmail.com> - 1:{version}-{release}\n"
 )
 out.append(f"- Git snapshot (commit {commit_count}: {commit_hash})\n")
 path.write_text("".join(out))
@@ -331,8 +331,8 @@ COMBINED_TARBALL=""
 if [[ "$IS_GIT" == true ]]; then
     echo "==> Packing git snapshot from local checkout"
     pack_git_source_tree "$TEMP_DIR"
-    SOURCE_DIR="$TEMP_DIR/dms-greeter-git-source"
-    SOURCE_TARBALL="dms-greeter-git-source.tar.gz"
+    SOURCE_DIR="$TEMP_DIR/advs-greeter-git-source"
+    SOURCE_TARBALL="advs-greeter-git-source.tar.gz"
 
     GO_VER="$(stage_go_toolchains "$WORK_DIR" | tr -d '[:space:]')"
     if [[ ! "$GO_VER" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
@@ -347,7 +347,7 @@ if [[ "$IS_GIT" == true ]]; then
         RPM_VERSION="${CHANGELOG_VERSION%%db*}"
         update_opensuse_git_spec "$WORK_DIR/$PACKAGE.spec" "$GO_VER" "$RPM_VERSION" "$COMMIT_COUNT" "$COMMIT_HASH"
         tar --sort=name --mtime='2000-01-01 00:00:00' --owner=0 --group=0 \
-            -czf "$WORK_DIR/$SOURCE_TARBALL" -C "$TEMP_DIR" "dms-greeter-git-source"
+            -czf "$WORK_DIR/$SOURCE_TARBALL" -C "$TEMP_DIR" "advs-greeter-git-source"
     fi
 
     if [[ "$UPLOAD_DEBIAN" == true ]]; then
@@ -355,7 +355,7 @@ if [[ "$IS_GIT" == true ]]; then
         # Fresh tree for debian (may share with opensuse pack above)
         if [[ ! -d "$SOURCE_DIR" ]]; then
             pack_git_source_tree "$TEMP_DIR"
-            SOURCE_DIR="$TEMP_DIR/dms-greeter-git-source"
+            SOURCE_DIR="$TEMP_DIR/advs-greeter-git-source"
         fi
         cp -r "distro/debian/$PACKAGE/debian" "$SOURCE_DIR/"
         cat >"$SOURCE_DIR/debian/changelog" <<EOF
@@ -369,7 +369,7 @@ EOF
 
         COMBINED_TARBALL="${PACKAGE}_${CHANGELOG_VERSION}.tar.gz"
         tar --sort=name --mtime='2000-01-01 00:00:00' --owner=0 --group=0 \
-            -czf "$WORK_DIR/$COMBINED_TARBALL" -C "$TEMP_DIR" "dms-greeter-git-source"
+            -czf "$WORK_DIR/$COMBINED_TARBALL" -C "$TEMP_DIR" "advs-greeter-git-source"
 
         TARBALL_MD5=$(md5sum "$WORK_DIR/$COMBINED_TARBALL" | cut -d' ' -f1)
         TARBALL_SIZE=$(stat -c%s "$WORK_DIR/$COMBINED_TARBALL")
@@ -408,7 +408,7 @@ EOF
     fi
 else
     # Stable: download release tarball
-    SOURCE_TARBALL="dank-greeter-${VERSION}.tar.gz"
+    SOURCE_TARBALL="ariadnev-greeter-${VERSION}.tar.gz"
     SOURCE_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${SOURCE_TARBALL}"
     echo "==> Downloading $SOURCE_URL"
     if ! { wget -q -O "$WORK_DIR/$SOURCE_TARBALL" "$SOURCE_URL" 2>/dev/null || curl -L -f -s -o "$WORK_DIR/$SOURCE_TARBALL" "$SOURCE_URL"; }; then
@@ -416,7 +416,7 @@ else
         exit 1
     fi
 
-    GO_VER=$(tar -xzOf "$WORK_DIR/$SOURCE_TARBALL" "dank-greeter-${VERSION}/core/go.mod" | grep -m1 '^go ' | awk '{print $2}')
+    GO_VER=$(tar -xzOf "$WORK_DIR/$SOURCE_TARBALL" "ariadnev-greeter-${VERSION}/core/go.mod" | grep -m1 '^go ' | awk '{print $2}')
     if [[ -z "$GO_VER" ]]; then
         echo "Error: Could not read Go version from the release tarball's core/go.mod"
         exit 1
@@ -452,7 +452,7 @@ else
     if [[ "$UPLOAD_DEBIAN" == true ]]; then
         echo "  - Preparing Debian native source (combined tarball + .dsc)"
         tar -xzf "$WORK_DIR/$SOURCE_TARBALL" -C "$TEMP_DIR"
-        SOURCE_DIR="$TEMP_DIR/dank-greeter-${VERSION}"
+        SOURCE_DIR="$TEMP_DIR/ariadnev-greeter-${VERSION}"
         if [[ ! -d "$SOURCE_DIR/core/vendor" ]]; then
             echo "Error: Release tarball is missing core/vendor (offline Debian build needs it)"
             exit 1
@@ -471,7 +471,7 @@ EOF
 
         COMBINED_TARBALL="${PACKAGE}_${CHANGELOG_VERSION}.tar.gz"
         tar --sort=name --mtime='2000-01-01 00:00:00' --owner=0 --group=0 \
-            -czf "$WORK_DIR/$COMBINED_TARBALL" -C "$TEMP_DIR" "dank-greeter-${VERSION}"
+            -czf "$WORK_DIR/$COMBINED_TARBALL" -C "$TEMP_DIR" "ariadnev-greeter-${VERSION}"
 
         TARBALL_MD5=$(md5sum "$WORK_DIR/$COMBINED_TARBALL" | cut -d' ' -f1)
         TARBALL_SIZE=$(stat -c%s "$WORK_DIR/$COMBINED_TARBALL")
