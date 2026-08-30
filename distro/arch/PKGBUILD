@@ -1,0 +1,46 @@
+# Maintainer: VChun <hoangbavan4478@gmail.com>
+pkgname=advs-greeter
+pkgver=0.1.0.ariadnev.1
+pkgrel=1
+pkgdesc="AriadnevGreeter — greetd login screen for AriadnevShell"
+arch=('x86_64' 'aarch64')
+url="https://github.com/bavanchun/ariadnev-greeter"
+license=('MIT')
+depends=('greetd' 'quickshell')
+makedepends=('go' 'git')
+optdepends=(
+  'hyprland: compositor cho greeter (cần hyprland HOẶC niri)'
+  'niri: compositor cho greeter (cần hyprland HOẶC niri)'
+  'ariadnev-shell: đồng bộ theme từ shell sang màn hình login'
+)
+_tag="v0.1.0-ariadnev.1"
+source=("$pkgname::git+$url.git#tag=$_tag"
+        "git+https://github.com/bavanchun/ariadnev-qml-common.git")
+sha256sums=('SKIP' 'SKIP')
+
+prepare() {
+  cd "$srcdir/$pkgname"
+  git submodule init
+  git config submodule.ariadnev-qml-common.url "$srcdir/ariadnev-qml-common"
+  git -c protocol.file.allow=always submodule update
+}
+
+build() {
+  cd "$srcdir/$pkgname"
+  # KHÔNG export GOFLAGS: core/Makefile tự khai GOFLAGS=-ldflags="-s -w" như
+  # biến make; GOFLAGS có sẵn trong env sẽ bị make xuất lại kèm dấu nháy cho
+  # tiến trình go con -> `parsing $GOFLAGS: unknown flag -w"` (bài học từ
+  # PKGBUILD của ariadnev-shell).
+  make build
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -Dm755 core/bin/advs-greeter "$pkgdir/usr/bin/advs-greeter"
+  install -Dm644 assets/systemd/sysusers-advs-greeter.conf \
+    "$pkgdir/usr/lib/sysusers.d/advs-greeter.conf"
+  install -Dm644 assets/systemd/tmpfiles-advs-greeter.conf \
+    "$pkgdir/usr/lib/tmpfiles.d/advs-greeter.conf"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
