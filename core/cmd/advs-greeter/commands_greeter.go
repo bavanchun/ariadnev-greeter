@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/AvengeMedia/dankgo/log"
 	"github.com/bavanchun/ariadnev-greeter/core/internal/greeter"
 	sharedpam "github.com/bavanchun/ariadnev-greeter/core/internal/pam"
-	"github.com/AvengeMedia/dankgo/log"
 	"github.com/spf13/cobra"
 )
 

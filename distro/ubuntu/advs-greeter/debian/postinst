@@ -92,7 +92,7 @@ Next steps:
      advs-greeter sync
 
 Ready to test? Run: sudo systemctl start greetd
-Documentation: https://ariadnev.vchun.dev/docs/advgreeter/
+Documentation: https://github.com/bavanchun/ariadnev-greeter
 =========================================================================
 
 EOF

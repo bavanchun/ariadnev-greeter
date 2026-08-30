@@ -343,7 +343,7 @@ Finish setup before rebooting:
      advs-greeter sync
 
 Verify with: advs-greeter status
-Documentation: https://ariadnev.vchun.dev/docs/advgreeter/
+Documentation: https://github.com/bavanchun/ariadnev-greeter
 =========================================================================
 
 EOF

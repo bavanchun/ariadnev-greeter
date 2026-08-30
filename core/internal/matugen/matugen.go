@@ -19,9 +19,9 @@ import (
 	"syscall"
 	"time"
 
+	log "github.com/AvengeMedia/dankgo/log"
 	"github.com/bavanchun/ariadnev-greeter/core/internal/adv16"
 	"github.com/bavanchun/ariadnev-greeter/core/internal/utils"
-	log "github.com/AvengeMedia/dankgo/log"
 )
 
 var ErrNoChanges = errors.New("no color changes")

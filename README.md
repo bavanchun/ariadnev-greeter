@@ -4,24 +4,20 @@
 > [dank-greeter](https://github.com/AvengeMedia/dank-greeter) by Avenge Media LLC,
 > used under the MIT License. The original copyright notice is retained in `LICENSE`.
 > This is an independent fork, not affiliated with or endorsed by Avenge Media.
-> Distro packaging under `distro/` still points at upstream build-service accounts
-> (COPR/PPA/OBS) and needs new accounts before it can run.
+> Only the Arch package (`distro/arch/PKGBUILD`) is maintained today; the other
+> `distro/` templates are inherited from upstream and have no published binary repo.
 
 <div align="center">
-  <a href="https://ariadnev.vchun.dev">
+  <a href="https://github.com/bavanchun/ariadnev-greeter">
     <img src="assets/advlogo.svg" alt="ADVS Greeter" width="200">
   </a>
 
-### A greetd login screen with the Adv Material aesthetic
+### A greetd login screen that matches AriadnevShell
 
 Built with [Quickshell](https://quickshell.org/) and [Go](https://go.dev/)
 
-[![Documentation](https://img.shields.io/badge/docs-ariadnev.vchun.dev-9ccbfb?style=for-the-badge&labelColor=101418)](https://ariadnev.vchun.dev/docs/advgreeter)
 [![GitHub stars](https://img.shields.io/github/stars/bavanchun/ariadnev-greeter?style=for-the-badge&labelColor=101418&color=ffd700)](https://github.com/bavanchun/ariadnev-greeter/stargazers)
 [![GitHub License](https://img.shields.io/github/license/bavanchun/ariadnev-greeter?style=for-the-badge&labelColor=101418&color=b9c8da)](https://github.com/bavanchun/ariadnev-greeter/blob/master/LICENSE)
-[![AUR version (git)](<https://img.shields.io/aur/version/greetd-advs-greeter-git?style=for-the-badge&labelColor=101418&color=9ccbfb&label=AUR%20(git)>)](https://aur.archlinux.org/packages/greetd-advs-greeter-git)
-[![Discord](https://img.shields.io/badge/discord-join?style=for-the-badge&logo=discord&logoColor=ffffff&label=discord&labelColor=101418&color=5865f2)](https://discord.gg/ppWTpKmPgT)
-[![Ko-Fi donate](https://img.shields.io/badge/donate-kofi?style=for-the-badge&logo=ko-fi&logoColor=ffffff&label=ko-fi&labelColor=101418&color=f16061&link=https%3A%2F%2Fko-fi.com%2Fariadnev)](https://ko-fi.com/ariadnev)
 
 </div>
 
@@ -51,60 +47,20 @@ ariadnev-greeter/
 
 ## Installation
 
-### Arch Linux (AUR)
+### Arch Linux
 
 ```bash
-yay -S greetd-advs-greeter-git
+git clone https://github.com/bavanchun/ariadnev-greeter
+cd ariadnev-greeter/distro/arch
+makepkg -si
+sudo advs-greeter install   # writes /etc/greetd/config.toml and enables greetd
 ```
 
-### Debian / openSUSE
+### Other distributions
 
-Official packages are available from the [AdvLinux OBS repository](https://software.opensuse.org/download/package?package=advs-greeter&project=home%3Abavanchun%3Aariadnev). Add the repo for your distribution, then install **`advs-greeter`** (stable) or **`advs-greeter-git`** (master; Conflicts with stable):
-
-```bash
-# Debian 13
-sudo apt install advs-greeter
-# sudo apt install advs-greeter-git
-
-# openSUSE Tumbleweed
-zypper install advs-greeter
-# zypper install advs-greeter-git
-```
-
-Ubuntu uses the same package names from [`ppa:avengemedia/ariadnev`](https://launchpad.net/~avengemedia/+archive/ubuntu/ariadnev). See the [Installation guide](https://ariadnev.vchun.dev/docs/advgreeter/installation) for full repository setup.
-
-### Fedora / RHEL / Rocky / Alma
-
-```bash
-sudo dnf copr enable avengemedia/ariadnev
-sudo dnf install advs-greeter
-```
-
-For the latest development build from `master` (Conflicts with the stable package):
-
-```bash
-sudo dnf copr enable avengemedia/ariadnev
-sudo dnf install advs-greeter-git
-```
-
-### Void Linux
-
-```bash
-echo 'repository=https://void.ariadnev.vchun.dev/advs/current' | sudo tee /etc/xbps.d/advs.conf
-sudo xbps-install -S advs-greeter
-# sudo xbps-install -S advs-greeter-git   # master snapshots; Conflicts with stable
-```
-
-The packages create the greeter user (via `systemd-sysusers` for atomic/immutable compatibility, with package script fallback), set up directories and permissions, and apply SELinux contexts where relevant.
-
-After installing from any package:
-
-```bash
-advs-greeter enable   # point greetd at advs-greeter
-advs-greeter sync     # sync your ADVS theme to the login screen
-```
-
-Or run `advs-greeter install` for interactive setup - it installs greetd where needed and writes `/etc/greetd/config.toml` for you.
+Packaging templates for Debian, Ubuntu, Fedora, openSUSE and Void live under
+`distro/`, but no binary repository is published for them yet. Build from source
+(below) or adapt a template.
 
 ### From Source
 

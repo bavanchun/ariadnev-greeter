@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	"github.com/bavanchun/ariadnev-greeter/core/internal/shellembed"
 	"github.com/AvengeMedia/dankgo/shellapp"
+	"github.com/bavanchun/ariadnev-greeter/core/internal/shellembed"
 )
 
 var shellApp = shellapp.New(shellapp.Config{
